@@ -1,6 +1,7 @@
 // websocket.js
 const WebSocket = require("ws");
 const sandoWindow = require("./sando_window");
+const { ipcMain } = require("electron");
 
 let ws;
 const DELAY = 3; //seconds
@@ -18,10 +19,10 @@ module.exports = {
       });
 
       ws.on("message", message => {
+        console.log("got something ws");
         console.log("Received message:", message.toString());
-        const payload = JSON.parse(message.toString())
-        console.log("i should create a window here");
-        sandoWindow.create(payload.htmlPath, {}, payload.sammiBtn, payload.sammiInstance, payload.data, payload.sammiVar)
+        const payload = JSON.parse(message.toString());
+        ipcMain.emit("ws-message", payload);
       });
 
       ws.on("close", async () => {
