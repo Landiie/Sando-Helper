@@ -1,7 +1,6 @@
 const utils = require("./modules/utils.js");
 const eWindow = require("./modules/window.js");
 const dialog = require("./modules/dialog.js");
-const ws = require("./modules/ws.js");
 const wss = require("./modules/wss.js");
 const sandoWindow = require("./modules/sando_window.js");
 const { app, BrowserWindow, ipcMain } = require("electron");
@@ -13,6 +12,10 @@ const SANDO_RELAY_PORT = 6626;
 main();
 
 app.whenReady().then(() => {
+  //dummy window to prevent cold boots... experimental
+  const win = eWindow.create({
+    show: false
+  })
   //   const win = sandoWindow.create(
   //     "file:///F:/Projects/GitHub%20Repos/Electron-Testing/index.html",
   //     {},
