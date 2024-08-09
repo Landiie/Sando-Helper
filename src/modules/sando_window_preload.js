@@ -1,6 +1,6 @@
 const ipc = require("electron").ipcRenderer;
 const process = require("process");
-const crypto = require('crypto');
+const crypto = require("crypto");
 const sandoWindow = require("./sando_window");
 const utils = require("./utils.js");
 const sammiBtn = utils.getArgValue("sammiButton", process.argv);
@@ -24,9 +24,16 @@ window.Sando = {
   // FromButton: currentSandoWindows
   payload: sammiPayload,
 };
+window.Sando.triggerExt = (extTrigger, params = {}) => {
+  ipc.send("SandoTriggerExt", extTrigger, params);
+};
+window.Sando.triggerExt = button => {
+  ipc.send("SandoTriggerButton", button);
+};
+
 window.Sando.getVariable = async (name, button) => {
-    const result = await getVariable(button, name)
-    return result
+  const result = await getVariable(button, name);
+  return result;
 };
 window.Sando.setVariable = (name, value, button, instance) => {
   if (!button) {
@@ -41,21 +48,47 @@ window.Sando.setStatus = status => {
 };
 
 function getVariable(targetButton, targetVar) {
-    if (!targetButton) targetButton = sammiBtn;
-    const getVarHash = createGetVariableHash(sammiBtn, sammiVar, sammiInstance, targetButton, targetVar);
-    const windowHash = sandoWindow.createHash(sammiBtn, sammiInstance, sammiVar);
-    return new Promise((resolve, reject) => {
-        ipc.once(getVarHash, (e, value) => {
-            ipc.send('log', 'got something, sending this: ' + value)
-            resolve(value)
-        })
-        ipc.send('SandoGetVariable', targetVar, targetButton, getVarHash, windowHash);
-    })
+  if (!targetButton) targetButton = sammiBtn;
+  const getVarHash = createGetVariableHash(
+    sammiBtn,
+    sammiVar,
+    sammiInstance,
+    targetButton,
+    targetVar
+  );
+  const windowHash = sandoWindow.createHash(sammiBtn, sammiInstance, sammiVar);
+  return new Promise((resolve, reject) => {
+    ipc.once(getVarHash, (e, value) => {
+      ipc.send("log", "got something, sending this: " + value);
+      resolve(value);
+    });
+    ipc.send(
+      "SandoGetVariable",
+      targetVar,
+      targetButton,
+      getVarHash,
+      windowHash
+    );
+  });
 }
 
-function createGetVariableHash(currentButton, currentVar, currentInstance, targetButton, targetVar) {
-    return crypto
-      .createHash("md5")
-      .update("" + currentButton + currentVar + currentInstance + targetButton + targetVar + Math.random())
-      .digest("hex");
+function createGetVariableHash(
+  currentButton,
+  currentVar,
+  currentInstance,
+  targetButton,
+  targetVar
+) {
+  return crypto
+    .createHash("md5")
+    .update(
+      "" +
+        currentButton +
+        currentVar +
+        currentInstance +
+        targetButton +
+        targetVar +
+        Math.random()
+    )
+    .digest("hex");
 }

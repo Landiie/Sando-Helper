@@ -5,15 +5,46 @@
   "main": "src/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "keywords": [],
   "author": "Landie",
   "license": "MIT",
   "devDependencies": {
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-deb": "^7.4.0",
+    "@electron-forge/maker-rpm": "^7.4.0",
+    "@electron-forge/maker-squirrel": "^7.4.0",
+    "@electron-forge/maker-zip": "^7.4.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
+    "@electron-forge/plugin-fuses": "^7.4.0",
+    "@electron/fuses": "^1.8.0",
+    "@rabbitholesyndrome/electron-forge-maker-portable": "^0.2.0",
     "electron": "^31.3.1"
   },
   "dependencies": {
+    "electron-squirrel-startup": "^1.0.1",
+    "express": "^4.19.2",
     "ws": "^8.18.0"
+  },
+  "config": {
+    "forge": {
+      "makers": [
+        {
+          "name": "@rabbitholesyndrome/electron-forge-maker-portable",
+          "config": {
+            "appId": "land.landie.sandohelper",
+            "win": {
+              "icon": "src/img/icon.ico"
+            },
+            "portable": {
+              "artifactName": "${name}.exe"
+            }
+          }
+        }
+      ]
+    }
   }
 }

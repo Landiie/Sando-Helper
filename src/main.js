@@ -1,6 +1,8 @@
 const utils = require("./modules/utils.js");
 const eWindow = require("./modules/window.js");
+const dialog = require("./modules/dialog.js");
 const ws = require("./modules/ws.js");
+const wss = require("./modules/wss.js");
 const sandoWindow = require("./modules/sando_window.js");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const process = require("process");
@@ -8,7 +10,6 @@ const { request } = require("http");
 
 // const SANDO_RELAY_PORT = utils.getArgValue('sandoRelayPort', process.argv)
 const SANDO_RELAY_PORT = 6626;
-
 main();
 
 app.whenReady().then(() => {
@@ -28,23 +29,51 @@ app.on("window-all-closed", e => {
 });
 
 async function main() {
-  await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
+  //await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
+  const startupPass = await wss.startup();
+  if (!startupPass) {
+    dialog.showMsg({type: 'error', message: 'Relay server could not start.'})
+    return;
+  }
+  wss.sendToBridge(JSON.stringify({
+    event: "SandoDevServerOperationalAndConnected"
+  }))
 }
+
+ipcMain.on("SandoTriggerExt", (e, extTrigger, params) => {
+  // console.log("SandoTriggerExt was called.");
+  wss.sendToBridge(
+    JSON.stringify({
+      event: "SandoDevTriggerExtCustomWindow",
+      extTrigger: extTrigger,
+      params: params,
+    })
+  );
+});
+ipcMain.on("SandoTriggerButton", (e, button) => {
+  // console.log("SandoTriggerButton was called.");
+  wss.sendToBridge(
+    JSON.stringify({
+      event: "SandoDevTriggerButtonCustomWindow",
+      button: button,
+    })
+  );
+});
 
 //result of this is in the ws message handler below
 ipcMain.on(
   "SandoGetVariable",
   (e, targetVar, targetButton, getVarHash, windowHash) => {
-    console.log("SandoGetVariable was called, that is progress");
-    console.log(
-      "heres stuff:",
-      e,
-      targetVar,
-      targetButton,
-      getVarHash,
-      windowHash
-    );
-    ws.sendMessage(
+    // console.log("SandoGetVariable was called, that is progress");
+    // console.log(
+    //   "heres stuff:",
+    //   e,
+    //   targetVar,
+    //   targetButton,
+    //   getVarHash,
+    //   windowHash
+    // );
+    wss.sendToBridge(
       JSON.stringify({
         event: "SandoDevGetVariableCustomWindow",
         button: targetButton,
@@ -57,12 +86,12 @@ ipcMain.on(
 );
 
 ipcMain.on("SandoSetVariable", (e, button, variable, instance, value) => {
-  console.log("Set Variable was called from window.");
+  // console.log("Set Variable was called from window.");
   sandoSetVariable(button, variable, instance, value);
 });
 
 ipcMain.on("SandoSetStatus", (e, button, variable, instance, value) => {
-  console.log("Set Status was called from window.");
+  // console.log("Set Status was called from window.");
   sandoSetVariable(button, variable, instance, value);
   const win = sandoWindow.getWindow(button, instance, variable);
   if (!win) {
@@ -74,47 +103,75 @@ ipcMain.on("SandoSetStatus", (e, button, variable, instance, value) => {
 });
 
 ipcMain.on("log", (e, value) => {
-  console.log(value);
+  // console.log(value);
 });
 
-ipcMain.on("ws-message", async e => {
-  console.log("wsmessage", e);
-  switch (e.event) {
+wss.events.on("sammi-bridge-message", async e => {
+  let data;
+
+  // console.log("message from sammi: ", e);
+
+  try {
+    data = JSON.parse(e);
+  } catch {
+    const msg =
+      "Landie you malformed the json string sent to the helper. dummy.";
+    dialog.showMsg({ type: "error", message: msg });
+    return;
+  }
+
+  // console.log("message from sammi (PARSED): ", data);
+
+  if (!data.event) {
+    const msg = "invalid, or lack of event on bridge payload";
+    dialog.showMsg({ type: "error", message: msg });
+  }
+
+  switch (data.event) {
     case "NewWindow": {
-      //console.log("i should create a window here");
       sandoWindow.create(
-        e.htmlPath,
-        e.windowConfig,
-        e.sammiBtn,
-        e.sammiInstance,
-        e.data,
-        e.sammiVar
+        data.htmlPath,
+        data.windowConfig,
+        data.sammiBtn,
+        data.sammiInstance,
+        data.payload,
+        data.sammiVar
       );
       break;
     }
     case "GetVariableResult": {
-      console.log("got a variable result!");
-      console.log(e);
-      const requestedWin = sandoWindow.getWindowFromHash(e.windowHash);
-      console.log("web contents of window:");
-      console.log(requestedWin);
-      requestedWin.webContents.send(e.hash, e.value);
+      // console.log("got a variable result!");
+      // console.log(data);
+      const requestedWin = sandoWindow.getWindowFromHash(data.windowHash);
+      // console.log("web contents of window:");
+      // console.log(requestedWin);
+      requestedWin.webContents.send(data.hash, data.value);
+      break;
+    }
+    case "testing" : {
+      // console.log(data.payload)
+      //wss.sendToBridge(JSON.stringify(data));
       break;
     }
     default: {
-        console.log('unknown event ', e.event)
+      const msg = `unknown event from bridge: "${data.event}"`;
+      dialog.showMsg({ type: "warning", message: msg });
       break;
     }
   }
 });
 
-function sandoSetVariable(button, variable, instance, value) {
-  console.log("btn", button);
-  console.log("var", variable);
-  console.log("inst", instance);
-  console.log("value", value);
+ipcMain.on("ws-message", async e => {
+  //console.log("wsmessage", e);
+});
 
-  ws.sendMessage(
+function sandoSetVariable(button, variable, instance, value) {
+  // console.log("btn", button);
+  // console.log("var", variable);
+  // console.log("inst", instance);
+  // console.log("value", value);
+
+  wss.sendToBridge(
     JSON.stringify({
       event: "SandoDevSetVariableCustomWindow",
       button: button,

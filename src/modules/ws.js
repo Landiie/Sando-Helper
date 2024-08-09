@@ -1,6 +1,7 @@
 // websocket.js
+//this isn't used anymore since the server got moved to the app
+//if i need to connect to something else though i'll rework this
 const WebSocket = require("ws");
-const sandoWindow = require("./sando_window");
 const { ipcMain } = require("electron");
 
 let ws;
@@ -14,20 +15,20 @@ module.exports = {
       ws = new WebSocket(url);
 
       ws.on("open", () => {
-        console.log("WebSocket connection opened");
+        // console.log("WebSocket connection opened");
         resolve();
       });
 
       ws.on("message", message => {
-        console.log("got something ws");
-        console.log("Received message:", message.toString());
+        // console.log("got something ws");
+        // console.log("Received message:", message.toString());
         const payload = JSON.parse(message.toString());
         ipcMain.emit("ws-message", payload);
       });
 
       ws.on("close", async () => {
-        console.log("WebSocket connection closed");
-        console.log(`Retrying in ${DELAY * 1000} seconds.`);
+        // console.log("WebSocket connection closed");
+        // console.log(`Retrying in ${DELAY * 1000} seconds.`);
         await socketDelay(DELAY * 1000);
         this.connect(url);
       });

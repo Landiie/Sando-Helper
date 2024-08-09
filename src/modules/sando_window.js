@@ -5,7 +5,7 @@ const crypto = require("crypto");
 module.exports = {
   currentWindows: {},
   create(fileUrl, settings, sammiBtn, sammiInstance, sammiPayload, sammiVar) {
-    const ws = require("./ws.js");
+    const wss = require("./wss.js");
     let defs = {
       title: "Sando Custom Window",
       center: true,
@@ -39,7 +39,7 @@ module.exports = {
     });
 
     win.on("close", () => {
-      ws.sendMessage(
+      wss.sendToBridge(
         JSON.stringify({
           event: "SandoDevSetVariableCustomWindow",
           button: sammiBtn,
