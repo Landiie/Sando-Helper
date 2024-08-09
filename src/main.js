@@ -6,6 +6,10 @@ const sandoWindow = require("./modules/sando_window.js");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const process = require("process");
 const { request } = require("http");
+const { powerSaveBlocker } = require('electron');
+
+//prevent cold boot of custom windows
+powerSaveBlocker.start('prevent-app-suspension');
 
 // const SANDO_RELAY_PORT = utils.getArgValue('sandoRelayPort', process.argv)
 const SANDO_RELAY_PORT = 6626;
