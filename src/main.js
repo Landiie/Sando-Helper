@@ -12,10 +12,6 @@ const SANDO_RELAY_PORT = 6626;
 main();
 
 app.whenReady().then(() => {
-  //dummy window to prevent cold boots... experimental
-  const win = eWindow.create({
-    show: false
-  })
   //   const win = sandoWindow.create(
   //     "file:///F:/Projects/GitHub%20Repos/Electron-Testing/index.html",
   //     {},
@@ -164,9 +160,9 @@ wss.events.on("sammi-bridge-message", async e => {
   }
 });
 
-ipcMain.on("ws-message", async e => {
-  //console.log("wsmessage", e);
-});
+// ipcMain.on("ws-message", async e => {
+//   //console.log("wsmessage", e);
+// });
 
 function sandoSetVariable(button, variable, instance, value) {
   // console.log("btn", button);
