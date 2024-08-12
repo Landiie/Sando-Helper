@@ -3,27 +3,30 @@ const eWindow = require("./modules/window.js");
 const dialog = require("./modules/dialog.js");
 const wss = require("./modules/wss.js");
 const sandoWindow = require("./modules/sando_window.js");
+const sandoDialog = require("./modules/sando_dialog.js");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const process = require("process");
 const { request } = require("http");
-const { powerSaveBlocker } = require('electron');
+const { powerSaveBlocker } = require("electron");
 
 //prevent cold boot of custom windows
-powerSaveBlocker.start('prevent-app-suspension');
+//ongoing issue...
+powerSaveBlocker.start("prevent-app-suspension"); //didn't work
+app.disableHardwareAcceleration(); // testing
 
 // const SANDO_RELAY_PORT = utils.getArgValue('sandoRelayPort', process.argv)
 const SANDO_RELAY_PORT = 6626;
 main();
 
 app.whenReady().then(() => {
-  //   const win = sandoWindow.create(
-  //     "file:///F:/Projects/GitHub%20Repos/Electron-Testing/index.html",
-  //     {},
-  //     "wawa"
-  //   );
-  //   win.on("ready-to-show", () => {
-  //     win.show();
-  //   });
+  // const win = sandoWindow.create(
+  //   "file:///F:/Projects/GitHub%20Repos/Electron-Testing/index.html",
+  //   {},
+  //   "wawa"
+  // );
+  // win.on("ready-to-show", () => {
+  //   win.show();
+  // });
 });
 
 //windows are only opened when using the Sando: Custom Window, makes no sense to close the app when none are visible.
@@ -35,12 +38,14 @@ async function main() {
   //await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
   const startupPass = await wss.startup();
   if (!startupPass) {
-    dialog.showMsg({type: 'error', message: 'Relay server could not start.'})
+    dialog.showMsg({ type: "error", message: "Relay server could not start." });
     return;
   }
-  wss.sendToBridge(JSON.stringify({
-    event: "SandoDevServerOperationalAndConnected"
-  }))
+  wss.sendToBridge(
+    JSON.stringify({
+      event: "SandoDevServerOperationalAndConnected",
+    })
+  );
 }
 
 ipcMain.on("SandoTriggerExt", (e, extTrigger, params) => {
@@ -131,6 +136,20 @@ wss.events.on("sammi-bridge-message", async e => {
   }
 
   switch (data.event) {
+    case "NewDialog": {
+      let result = await dialog.showMsg(data.dialogConfig);
+      if (!data.dialogConfig?.checkboxLabel) delete result.checkboxChecked
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "SandoDevDialog",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          result: result,
+        })
+      );
+      break;
+    }
     case "NewWindow": {
       sandoWindow.create(
         data.htmlPath,
@@ -151,9 +170,18 @@ wss.events.on("sammi-bridge-message", async e => {
       requestedWin.webContents.send(data.hash, data.value);
       break;
     }
-    case "testing" : {
-      // console.log(data.payload)
-      //wss.sendToBridge(JSON.stringify(data));
+    case "testing": {
+      const result = await dialog.showMsg({
+        type: "info",
+        message: "Are you sure you want to delete the world?",
+        buttons: ["Yes", "No"],
+        defaultId: 0,
+        detail: "destroying the world is not a great idea by the way",
+        checkboxLabel: "Never show again",
+        checkboxChecked: false,
+        cancelId: 1,
+      });
+      console.log(result);
       break;
     }
     default: {

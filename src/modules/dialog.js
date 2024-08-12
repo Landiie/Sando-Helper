@@ -1,4 +1,3 @@
-const window = require("./window");
 const { app, dialog, BrowserWindow } = require("electron");
 
 module.exports = {
@@ -21,7 +20,7 @@ module.exports = {
     const finalSettings = { ...defs, ...settings };
     // console.log('Showing message type', finalSettings.type)
     // console.log(finalSettings.message)
-    const dialogRes = dialog.showMessageBoxSync(dummy, finalSettings);
+    const dialogRes = await dialog.showMessageBox(dummy, finalSettings);
     dummy.destroy();
     return dialogRes
   },

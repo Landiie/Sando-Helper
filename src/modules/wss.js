@@ -26,10 +26,17 @@ module.exports = {
       fs.writeFileSync("server.status", "running", "utf-8");
 
       wss.on("connection", function connection(ws, req) {
-        // console.log(req.url);
+        console.log("connected: ", req.url);
         ws.sammi_identifier = req.url;
 
-        if (req.url === "/sammi-bridge") resolve(true);
+        if (req.url === "/sammi-bridge") {
+          module.exports.sendToBridge(
+            JSON.stringify({
+              event: "SandoDevHelperConnected"
+            })
+          );
+          resolve(true);
+        }
 
         if (req.url === "/") {
           dialog.showMsg({
@@ -72,7 +79,7 @@ module.exports = {
 
               builtPayload = {
                 source: "/sammi-bridge", //not needed
-                target: '/'+ bridgeDataStructure.target_client_id,
+                target: "/" + bridgeDataStructure.target_client_id,
                 data: bridgeDataStructure.data,
               };
               break;
@@ -113,7 +120,7 @@ module.exports = {
                 //  `sent data from bridge to ${client.sammi_identifier}`
                 //);
                 client.send(JSON.stringify(builtPayload.data));
-                passed = true
+                passed = true;
               } else if (
                 builtPayload.target === "/sammi-bridge" &&
                 client.sammi_identifier === "/sammi-bridge"
@@ -123,13 +130,16 @@ module.exports = {
                 //  `sent data from client ${builtPayload.source} to bridge`
                 //);
                 client.send(JSON.stringify(builtPayload));
-                passed = true
+                passed = true;
               }
             }
           });
 
           if (!passed) {
-            dialog.showMsg({type: 'error', message:'could not find any client id connected to match'})
+            dialog.showMsg({
+              type: "error",
+              message: "could not find any client id connected to match",
+            });
           }
           // // console.log("data recieved parsed:", bridgeData);
 
