@@ -7,11 +7,11 @@ module.exports = {
       alwaysOnTop: true,
       center: true,
       show: false,
+      focusable: true
     });
 
     let defs = {
       type: "info",
-      message: "default message",
       buttons: [],
       title: "Sando Helper",
       noLink: true,
