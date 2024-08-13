@@ -18,7 +18,7 @@ app.disableHardwareAcceleration(); // testing
 const SANDO_RELAY_PORT = 6626;
 main();
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // const win = sandoWindow.create(
   //   "file:///F:/Projects/GitHub%20Repos/Electron-Testing/index.html",
   //   {},
@@ -136,9 +136,31 @@ wss.events.on("sammi-bridge-message", async e => {
   }
 
   switch (data.event) {
+    case "NewFileSave": {
+      const res = await dialog.showSave(data.config)
+      wss.sendToBridge(JSON.stringify({
+        event: "SandoDevFileSave",
+        button: data.sammiBtn,
+        variable: data.sammiVar,
+        instance: data.sammiInstance,
+        result: res
+      }))
+      break;
+    }
+    case "NewFileOpen": {
+      const res = await dialog.showOpen(data.config)
+      wss.sendToBridge(JSON.stringify({
+        event: "SandoDevFileOpen",
+        button: data.sammiBtn,
+        variable: data.sammiVar,
+        instance: data.sammiInstance,
+        result: res
+      }))
+      break;
+    }
     case "NewDialog": {
       let result = await dialog.showMsg(data.dialogConfig);
-      if (!data.dialogConfig?.checkboxLabel) delete result.checkboxChecked
+      if (!data.dialogConfig?.checkboxLabel) delete result.checkboxChecked;
       wss.sendToBridge(
         JSON.stringify({
           event: "SandoDevDialog",
@@ -171,16 +193,7 @@ wss.events.on("sammi-bridge-message", async e => {
       break;
     }
     case "testing": {
-      const result = await dialog.showMsg({
-        type: "info",
-        message: "Are you sure you want to delete the world?",
-        buttons: ["Yes", "No"],
-        defaultId: 0,
-        detail: "destroying the world is not a great idea by the way",
-        checkboxLabel: "Never show again",
-        checkboxChecked: false,
-        cancelId: 1,
-      });
+      const result = await dialog.showFileOpen({});
       console.log(result);
       break;
     }
