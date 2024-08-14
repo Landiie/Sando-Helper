@@ -137,25 +137,29 @@ wss.events.on("sammi-bridge-message", async e => {
 
   switch (data.event) {
     case "NewFileSave": {
-      const res = await dialog.showSave(data.config)
-      wss.sendToBridge(JSON.stringify({
-        event: "SandoDevFileSave",
-        button: data.sammiBtn,
-        variable: data.sammiVar,
-        instance: data.sammiInstance,
-        result: res
-      }))
+      const res = await dialog.showSave(data.config);
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "SandoDevFileSave",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          result: res,
+        })
+      );
       break;
     }
     case "NewFileOpen": {
-      const res = await dialog.showOpen(data.config)
-      wss.sendToBridge(JSON.stringify({
-        event: "SandoDevFileOpen",
-        button: data.sammiBtn,
-        variable: data.sammiVar,
-        instance: data.sammiInstance,
-        result: res
-      }))
+      const res = await dialog.showOpen(data.config);
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "SandoDevFileOpen",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          result: res,
+        })
+      );
       break;
     }
     case "NewDialog": {
@@ -193,7 +197,7 @@ wss.events.on("sammi-bridge-message", async e => {
       break;
     }
     case "testing": {
-      const result = await dialog.showFileOpen({});
+      const result = await dialog.showOpen({});
       console.log(result);
       break;
     }
