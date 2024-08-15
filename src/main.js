@@ -183,17 +183,27 @@ wss.events.on("sammi-bridge-message", async e => {
         data.sammiBtn,
         data.sammiInstance,
         data.payload,
+        data.id,
         data.sammiVar
       );
       break;
     }
     case "GetVariableResult": {
-      // console.log("got a variable result!");
-      // console.log(data);
+      console.log("got a variable result!");
+      console.log(data);
       const requestedWin = sandoWindow.getWindowFromHash(data.windowHash);
       // console.log("web contents of window:");
       // console.log(requestedWin);
       requestedWin.webContents.send(data.hash, data.value);
+      break;
+    }
+    case "EmitEventWindow": {
+      console.log('emitting event', data)
+      const windows = sandoWindow.getWindowsFromId(data.id)
+      console.log('returned windows', windows)
+      windows.forEach(win => {
+        win.webContents.send("SandoTriggerListener", data.eventToEmit, data.payload)
+      });
       break;
     }
     case "testing": {

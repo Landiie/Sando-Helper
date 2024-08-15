@@ -5,6 +5,7 @@ const sandoWindow = require("./sando_window");
 const utils = require("./utils.js");
 const sammiBtn = utils.getArgValue("sammiButton", process.argv);
 const sammiInstance = utils.getArgValue("sammiInstance", process.argv);
+const sammiId = utils.getArgValue("sammiId", process.argv);
 let sammiPayload = utils.getArgValue("sammiPayload", process.argv);
 ipc.send("log", typeof sammiPayload);
 if (sammiPayload !== "undefined") {
@@ -19,15 +20,42 @@ ipc.send("log", sammiBtn);
 ipc.send("log", sammiInstance);
 ipc.send("log", sammiPayload);
 ipc.send("log", sammiVar);
+ipc.send("log", sammiId);
 
 window.Sando = {
   // FromButton: currentSandoWindows
   payload: sammiPayload,
 };
+
+window.Sando.on = (eventName, callback) => {
+  if (!sammiId)
+    throw new Error(
+      "This window has no ID! Please give it one when calling it using the SAMMI command."
+    );
+  if (!sandoWindow.events[sammiId]) sandoWindow.events[sammiId] = {};
+  if (!sandoWindow.events[sammiId][eventName])
+    sandoWindow.events[sammiId][eventName] = [];
+
+  sandoWindow.events[sammiId][eventName].push(callback);
+};
+
+ipc.on("SandoTriggerListener", (e, eventName, payload) => {
+  if (
+    !sammiId ||
+    !sandoWindow.events[sammiId] ||
+    !sandoWindow.events[sammiId][eventName] ||
+    sandoWindow.events[sammiId][eventName].length === 0
+  )
+    return;
+  sandoWindow.events[sammiId][eventName].forEach(callback => {
+    callback(payload);
+  });
+});
+
 window.Sando.triggerExt = (extTrigger, params = {}) => {
   ipc.send("SandoTriggerExt", extTrigger, params);
 };
-window.Sando.triggerExt = button => {
+window.Sando.triggerButton = button => {
   ipc.send("SandoTriggerButton", button);
 };
 

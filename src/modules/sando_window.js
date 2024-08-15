@@ -1,10 +1,21 @@
 const eWindow = require("./window.js");
 const path = require("path");
 const crypto = require("crypto");
+const utils = require("./utils.js");
+const { MenuItem } = require("electron");
 
 module.exports = {
+  events: {},
   currentWindows: {},
-  create(fileUrl, settings, sammiBtn, sammiInstance, sammiPayload, sammiVar) {
+  create(
+    fileUrl,
+    settings,
+    sammiBtn,
+    sammiInstance,
+    sammiPayload,
+    sammiId,
+    sammiVar
+  ) {
     const wss = require("./wss.js");
     let defs = {
       title: "Sando Custom Window",
@@ -26,13 +37,20 @@ module.exports = {
       },
     };
 
+    if (sammiId !== "" && sammiId !== undefined)
+      defs.webPreferences.additionalArguments.push(`--sammiId=${sammiId}`);
+
     const finalSettings = { ...defs, ...settings };
     const win = eWindow.create(finalSettings);
 
     win.loadURL(fileUrl);
 
     const windowHash = this.createHash(sammiBtn, sammiInstance, sammiVar);
-    this.currentWindows[`window-${windowHash}`] = win;
+    this.currentWindows[`window-${windowHash}`] = {};
+    this.currentWindows[`window-${windowHash}`].win = win;
+
+    this.currentWindows[`window-${windowHash}`].id =
+      sammiId !== undefined ? sammiId : null;
 
     win.on("ready-to-show", () => {
       win.show();
@@ -52,14 +70,24 @@ module.exports = {
   },
   getWindow(btn, instance, variable) {
     const windowHash = this.createHash(btn, instance, variable);
-    const win = this.currentWindows[`window-${windowHash}`];
+    const win = this.currentWindows[`window-${windowHash}`]?.win;
     if (!win) return null;
     return win;
   },
   getWindowFromHash(windowHash) {
-    const win = this.currentWindows[`window-${windowHash}`];
+    const win = this.currentWindows[`window-${windowHash}`]?.win;
     if (!win) return null;
     return win;
+  },
+  getWindowsFromId(id) {
+    const windows = [];
+    const res = utils.searchObjofObjs(this.currentWindows, "id", id);
+    console.log('wins', this.currentWindows)
+    console.log('wins from id', res)
+    res.forEach(item => {
+      windows.push(item.win);
+    });
+    return windows;
   },
   getWindowList() {
     return this.currentWindows;

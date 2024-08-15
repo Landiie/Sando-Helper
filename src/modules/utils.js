@@ -10,6 +10,14 @@ module.exports = {
       const arr = others[i];
       mergedArr = Array.from(new Set(mergedArr.concat(arr)));
     }
-    return mergedArr
+    return mergedArr;
+  },
+  searchObjofObjs(targetObj, key, value) {
+    const matched = [];
+    const objs = Object.values(targetObj);
+    objs.forEach(obj => {
+      if (obj[key] === value) matched.push(obj);
+    });
+    return matched;
   },
 };
