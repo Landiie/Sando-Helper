@@ -198,11 +198,15 @@ wss.events.on("sammi-bridge-message", async e => {
       break;
     }
     case "EmitEventWindow": {
-      console.log('emitting event', data)
-      const windows = sandoWindow.getWindowsFromId(data.id)
-      console.log('returned windows', windows)
-      windows.forEach(win => {
-        win.webContents.send("SandoTriggerListener", data.eventToEmit, data.payload)
+      console.log("emitting event", data);
+      const windows = sandoWindow.getWindowsFromId(data.id);
+      console.log("returned windows", windows);
+      windows.forEach(async win => {
+        await win.webContents.send(
+          "SandoTriggerListener",
+          data.eventToEmit,
+          data.payload
+        );
       });
       break;
     }
