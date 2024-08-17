@@ -8,6 +8,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const process = require("process");
 const { request } = require("http");
 const { powerSaveBlocker } = require("electron");
+const deckTamper = require('./modules/deck_tamper.js')
 
 //prevent cold boot of custom windows
 //ongoing issue...

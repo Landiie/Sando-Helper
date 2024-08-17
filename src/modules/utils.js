@@ -1,3 +1,5 @@
+const crypto = require('crypto')
+
 module.exports = {
   getArgValue(query, args) {
     const arg = process.argv.filter(p => p.indexOf(query) >= 0)[0];
@@ -19,5 +21,8 @@ module.exports = {
       if (obj[key] === value) matched.push(obj);
     });
     return matched;
+  },
+  createHash(str) {
+    return crypto.createHash("md5").update(str).digest("hex");
   },
 };
