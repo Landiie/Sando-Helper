@@ -16,9 +16,9 @@ app.disableHardwareAcceleration();
 
 // const SANDO_RELAY_PORT = utils.getArgValue('sandoRelayPort', process.argv)
 const SANDO_RELAY_PORT = 6626;
-main();
 
 app.whenReady().then(async () => {
+  main();
   // const win = sandoWindow.create(
   //   "file:///F:/Projects/GitHub%20Repos/Electron-Testing/index.html",
   //   {},
@@ -41,11 +41,11 @@ async function main() {
     dialog.showMsg({ type: "error", message: "Relay server could not start." });
     return;
   }
-  wss.sendToBridge(
-    JSON.stringify({
-      event: "SandoDevServerOperationalAndConnected",
-    })
-  );
+  // wss.sendToBridge(
+  //   JSON.stringify({
+  //     event: "SandoDevServerOperationalAndConnected",
+  //   })
+  // );
 }
 
 ipcMain.on("SandoTriggerExt", (e, extTrigger, params) => {
@@ -178,6 +178,7 @@ wss.events.on("sammi-bridge-message", async e => {
       break;
     }
     case "NewWindow": {
+      console.log("creating new window");
       await sandoWindow.create(
         data.htmlPath,
         data.windowConfig,
@@ -187,12 +188,13 @@ wss.events.on("sammi-bridge-message", async e => {
         data.id,
         data.sammiVar
       );
-      console.log("window showing!");
+      // console.log("window showing!");
+      if (data.sammiVarVis === "" || data.sammiVarVis === undefined) return;
       wss.sendToBridge(
         JSON.stringify({
           event: "SandoDevWindowShowing",
           button: data.sammiBtn,
-          variable: data.sammiVar,
+          variable: data.sammiVarVis,
           instance: data.sammiInstance,
         })
       );
