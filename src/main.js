@@ -178,7 +178,7 @@ wss.events.on("sammi-bridge-message", async e => {
       break;
     }
     case "NewWindow": {
-      sandoWindow.create(
+      await sandoWindow.create(
         data.htmlPath,
         data.windowConfig,
         data.sammiBtn,
@@ -186,6 +186,15 @@ wss.events.on("sammi-bridge-message", async e => {
         data.payload,
         data.id,
         data.sammiVar
+      );
+      console.log("window showing!");
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "SandoDevWindowShowing",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+        })
       );
       break;
     }

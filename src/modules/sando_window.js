@@ -15,7 +15,7 @@ module.exports = {
     sammiId,
     sammiVar
   ) {
-    sammiPayload ??= {}
+    sammiPayload ??= {};
     const wss = require("./wss.js");
     let defs = {
       title: "Sando Custom Window",
@@ -52,10 +52,6 @@ module.exports = {
     this.currentWindows[`window-${windowHash}`].id =
       sammiId !== undefined ? sammiId : null;
 
-    win.on("ready-to-show", () => {
-      win.show();
-    });
-
     win.on("close", () => {
       wss.sendToBridge(
         JSON.stringify({
@@ -67,6 +63,13 @@ module.exports = {
         })
       );
       this.removeWindow(sammiBtn, sammiInstance, sammiVar);
+    });
+
+    return new Promise((resolve, reject) => {
+      win.on("ready-to-show", () => {
+        win.show();
+        resolve();
+      });
     });
   },
   getWindow(btn, instance, variable) {
