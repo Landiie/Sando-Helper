@@ -72,7 +72,7 @@ module.exports = {
               }
 
               if (bridgeDataStructure.target_client_id === "Sando Helper") {
-                console.log("sending right to the helper emitter");
+                //console.log(" right to the helper emitter");
                 events.emit("sammi-bridge-message", bridgeDataStructure.data);
                 return;
               }

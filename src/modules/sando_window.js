@@ -66,6 +66,7 @@ module.exports = {
           value: false,
         })
       );
+      this.removeWindow(sammiBtn, sammiInstance, sammiVar)
     });
   },
   getWindow(btn, instance, variable) {
@@ -82,8 +83,8 @@ module.exports = {
   getWindowsFromId(id) {
     const windows = [];
     const res = utils.searchObjofObjs(this.currentWindows, "id", id);
-    console.log('wins', this.currentWindows)
-    console.log('wins from id', res)
+    //console.log('wins', this.currentWindows)
+    //console.log('wins from id', res)
     res.forEach(item => {
       windows.push(item.win);
     });
@@ -97,5 +98,10 @@ module.exports = {
       .createHash("md5")
       .update("" + btn + instance + variable)
       .digest("hex");
+  },
+  removeWindow(btn, instance, variable) {
+    const windowHash = this.createHash(btn, instance, variable);
+    if (this.currentWindows[`window-${windowHash}`])
+      delete this.currentWindows[`window-${windowHash}`];
   },
 };

@@ -12,7 +12,7 @@ const { powerSaveBlocker } = require("electron");
 //prevent cold boot of custom windows
 //ongoing issue...
 powerSaveBlocker.start("prevent-app-suspension"); //didn't work
-app.disableHardwareAcceleration(); // testing
+app.disableHardwareAcceleration();
 
 // const SANDO_RELAY_PORT = utils.getArgValue('sandoRelayPort', process.argv)
 const SANDO_RELAY_PORT = 6626;
@@ -108,10 +108,11 @@ ipcMain.on("SandoSetStatus", (e, button, variable, instance, value) => {
   }
   //destroy, so it doesn't fire "close" event, which is how we listen to the "X" button being fired for SAMMI
   win.destroy();
+  sandoWindow.removeWindow(button, instance, variable)
 });
 
 ipcMain.on("log", (e, value) => {
-  // console.log(value);
+  console.log(value);
 });
 
 wss.events.on("sammi-bridge-message", async e => {
@@ -198,9 +199,11 @@ wss.events.on("sammi-bridge-message", async e => {
       break;
     }
     case "EmitEventWindow": {
-      console.log("emitting event", data);
+      //console.log("emitting event", data);
       const windows = sandoWindow.getWindowsFromId(data.id);
-      console.log("returned windows", windows);
+      //console.log("returned windows", windows);
+
+      //async required here for events with multiple listeners on one
       windows.forEach(async win => {
         await win.webContents.send(
           "SandoTriggerListener",

@@ -7,7 +7,6 @@ const sammiBtn = utils.getArgValue("sammiButton", process.argv);
 const sammiInstance = utils.getArgValue("sammiInstance", process.argv);
 const sammiId = utils.getArgValue("sammiId", process.argv);
 let sammiPayload = utils.getArgValue("sammiPayload", process.argv);
-ipc.send("log", typeof sammiPayload);
 if (sammiPayload !== "undefined") {
   sammiPayload = JSON.parse(sammiPayload);
 } else {
@@ -16,11 +15,11 @@ if (sammiPayload !== "undefined") {
 
 const sammiVar = utils.getArgValue("sammiVar", process.argv);
 
-ipc.send("log", sammiBtn);
-ipc.send("log", sammiInstance);
-ipc.send("log", sammiPayload);
-ipc.send("log", sammiVar);
-ipc.send("log", sammiId);
+// ipc.send("log", sammiBtn);
+// ipc.send("log", sammiInstance);
+// ipc.send("log", sammiPayload);
+// ipc.send("log", sammiVar);
+// ipc.send("log", sammiId);
 
 window.Sando = {
   // FromButton: currentSandoWindows
