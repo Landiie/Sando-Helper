@@ -108,7 +108,7 @@ ipcMain.on("SandoSetStatus", (e, button, variable, instance, value) => {
   }
   //destroy, so it doesn't fire "close" event, which is how we listen to the "X" button being fired for SAMMI
   win.destroy();
-  sandoWindow.removeWindow(button, instance, variable)
+  sandoWindow.removeWindow(button, instance, variable);
 });
 
 ipcMain.on("log", (e, value) => {

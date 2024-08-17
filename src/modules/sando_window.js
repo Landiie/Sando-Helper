@@ -5,7 +5,6 @@ const utils = require("./utils.js");
 const { MenuItem } = require("electron");
 
 module.exports = {
-  events: {},
   currentWindows: {},
   create(
     fileUrl,
@@ -16,6 +15,7 @@ module.exports = {
     sammiId,
     sammiVar
   ) {
+    sammiPayload ??= {}
     const wss = require("./wss.js");
     let defs = {
       title: "Sando Custom Window",
@@ -26,8 +26,8 @@ module.exports = {
       show: false,
       webPreferences: {
         preload: path.join(__dirname, "sando_window_preload.js"),
-        nodeIntegration: true,
-        contextIsolation: false,
+        nodeIntegration: false,
+        contextIsolation: true,
         additionalArguments: [
           `--sammiButton=${sammiBtn}`,
           `--sammiInstance=${sammiInstance}`,
@@ -66,7 +66,7 @@ module.exports = {
           value: false,
         })
       );
-      this.removeWindow(sammiBtn, sammiInstance, sammiVar)
+      this.removeWindow(sammiBtn, sammiInstance, sammiVar);
     });
   },
   getWindow(btn, instance, variable) {
