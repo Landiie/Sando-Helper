@@ -1,8 +1,11 @@
 const { app, BrowserWindow } = require("electron");
-
+const path = require("path");
 module.exports = {
   create(settings) {
-    const win = new BrowserWindow(settings);
-    return win
+    defs = {
+      icon: path.join(__dirname, "..", "img", "icon.ico"),
+    };
+    const win = new BrowserWindow({ ...defs, ...settings });
+    return win;
   },
 };

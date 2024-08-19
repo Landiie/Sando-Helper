@@ -4,15 +4,22 @@ const WebSocket = require("ws");
 const fs = require("fs");
 const { EventEmitter } = require("events");
 const dialog = require("./dialog");
+const { app } = require("electron");
+const utils = require('./utils')
 
 // checkIfRunning();
 
 const server = http.createServer(express);
 
-const configs = argsToObj();
-if (!configs.port) configs.port = 6626;
+let serverPort = 6627;
 
-server.listen(configs.port, function () {
+if (app.isPackaged) {
+  serverPort = utils.getArgValue("--port", process.argv);
+} else {
+  console.log('dev mode, using default port', serverPort)
+}
+
+server.listen(serverPort, function () {
   // console.log(`Relay server is listening on ${configs.port}!`);
 });
 

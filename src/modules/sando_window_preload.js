@@ -1,6 +1,6 @@
 const ipc = require("electron").ipcRenderer;
 const { contextBridge } = require("electron");
-// const sandoWindow = require("./sando_window");
+//?preload inherits process by default if node integration is disabled
 const sammiBtn = getArgValue("sammibutton", process.argv);
 const sammiInstance = getArgValue("sammiinstance", process.argv);
 const sammiId = getArgValue("sammiid", process.argv);
@@ -510,6 +510,10 @@ var MD5 = function (d) {
 };
 
 ipc.send("log", sammiPayload);
+
+ipc.on("SandoForcedStatus", (e, status) => {
+  ipc.send("SandoSetStatus", sammiBtn, sammiVar, sammiInstance, status);
+})
 
 
 ipc.on("SandoTriggerListener", (e, eventName, payload) => {

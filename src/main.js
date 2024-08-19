@@ -8,15 +8,11 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const process = require("process");
 const { request } = require("http");
 const { powerSaveBlocker } = require("electron");
-const deckTamper = require('./modules/deck_tamper.js')
+const sammiPoller = require('./modules/sammi_poller.js')
+//const deckTamper = require('./modules/deck_tamper.js')
 
-//prevent cold boot of custom windows
-//ongoing issue...
-powerSaveBlocker.start("prevent-app-suspension"); //didn't work
-app.disableHardwareAcceleration();
-
-// const SANDO_RELAY_PORT = utils.getArgValue('sandoRelayPort', process.argv)
-const SANDO_RELAY_PORT = 6626;
+powerSaveBlocker.start("prevent-app-suspension");
+// app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
   main();
@@ -36,6 +32,8 @@ app.on("window-all-closed", e => {
 });
 
 async function main() {
+
+  sammiPoller.start()
   //await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
   const startupPass = await wss.startup();
   if (!startupPass) {
@@ -225,6 +223,15 @@ wss.events.on("sammi-bridge-message", async e => {
       });
       break;
     }
+    case "SetWindowStatus": {
+      const windows = sandoWindow.getWindowsFromId(data.id);
+
+      //async required here for events with multiple listeners on one
+      windows.forEach(async win => {
+        await win.webContents.send("SandoForcedStatus", data.status);
+      });
+      break;
+    }
     case "testing": {
       const result = await dialog.showOpen({});
       console.log(result);
@@ -241,6 +248,8 @@ wss.events.on("sammi-bridge-message", async e => {
 // ipcMain.on("ws-message", async e => {
 //   //console.log("wsmessage", e);
 // });
+
+function sandoSetStatus(status, button, instance, variable) {}
 
 function sandoSetVariable(button, variable, instance, value) {
   // console.log("btn", button);
