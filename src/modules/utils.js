@@ -1,4 +1,4 @@
-const crypto = require('crypto')
+const crypto = require("crypto");
 
 module.exports = {
   getArgValue(query, args) {
@@ -25,4 +25,11 @@ module.exports = {
   createHash(str) {
     return crypto.createHash("md5").update(str).digest("hex");
   },
+  // appendToUrl(url, append) {
+  //   let pos = url.indexOf("?")
+  //   if (pos === -1) {
+  //     // throw new Error("Url cannot have query string to use this function.");
+
+  //   }
+  // },
 };

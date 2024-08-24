@@ -1,6 +1,5 @@
 const chokidar = require("chokidar");
 const { EventEmitter } = require("events");
-const utils = require("./utils");
 
 const events = new EventEmitter();
 

@@ -1,29 +1,21 @@
-const utils = require("./modules/utils.js");
-const eWindow = require("./modules/window.js");
-const dialog = require("./modules/dialog.js");
 const wss = require("./modules/wss.js");
+const dialog = require("./modules/dialog.js");
 const sandoWindow = require("./modules/sando_window.js");
-const sandoDialog = require("./modules/sando_dialog.js");
-const { app, BrowserWindow, ipcMain } = require("electron");
-const process = require("process");
-const { request } = require("http");
+const window = require("./modules/window.js");
+const { app, ipcMain } = require("electron");
 const { powerSaveBlocker } = require("electron");
-const sammiPoller = require('./modules/sammi_poller.js')
+const sammiPoller = require("./modules/sammi_poller.js");
 //const deckTamper = require('./modules/deck_tamper.js')
+const obsForum = require("./modules/obs_forum.js");
+const utils = require("./modules/utils.js");
+
 
 powerSaveBlocker.start("prevent-app-suspension");
 // app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
-  main();
-  // const win = sandoWindow.create(
-  //   "file:///F:/Projects/GitHub%20Repos/Electron-Testing/index.html",
-  //   {},
-  //   "wawa"
-  // );
-  // win.on("ready-to-show", () => {
-  //   win.show();
-  // });
+  // await obsForum.downloadPlugin("https://duckduckgo.com/50x.html?e=2");
+  await main();
 });
 
 //windows are only opened when using the Sando: Custom Window, makes no sense to close the app when none are visible.
@@ -32,8 +24,7 @@ app.on("window-all-closed", e => {
 });
 
 async function main() {
-
-  sammiPoller.start()
+  sammiPoller.start();
   //await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
   const startupPass = await wss.startup();
   if (!startupPass) {

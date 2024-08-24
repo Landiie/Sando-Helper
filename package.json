@@ -21,30 +21,22 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
-    "@rabbitholesyndrome/electron-forge-maker-portable": "^0.2.0",
-    "electron": "^31.3.1"
+    "electron": "^31.3.1",
+    "electron-squirrel-startup": "^1.0.1"
   },
   "dependencies": {
+    "cheerio": "^1.0.0",
     "chokidar": "^3.6.0",
-    "electron-squirrel-startup": "^1.0.1",
     "express": "^4.19.2",
     "find-process": "^1.4.7",
+    "semver": "^7.6.3",
     "ws": "^8.18.0"
   },
   "config": {
     "forge": {
       "makers": [
         {
-          "name": "@rabbitholesyndrome/electron-forge-maker-portable",
-          "config": {
-            "appId": "land.landie.sandohelper",
-            "win": {
-              "icon": "src/img/icon.ico"
-            },
-            "portable": {
-              "artifactName": "${name}.exe"
-            }
-          }
+          "name": "@electron-forge/maker-zip"
         }
       ]
     }
