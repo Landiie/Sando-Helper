@@ -31,14 +31,5 @@
     "find-process": "^1.4.7",
     "semver": "^7.6.3",
     "ws": "^8.18.0"
-  },
-  "config": {
-    "forge": {
-      "makers": [
-        {
-          "name": "@electron-forge/maker-zip"
-        }
-      ]
-    }
   }
 }
