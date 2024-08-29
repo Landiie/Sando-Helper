@@ -10,7 +10,7 @@ const path = require("path");
 
 // checkIfRunning();
 
-const CONNECTED_FILE_PATH = path.join(__dirname, "bridge.connected");
+const CONNECTED_FILE_PATH = path.join(app.getAppPath(), "bridge.connected");
 
 const server = http.createServer(express);
 
