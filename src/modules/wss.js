@@ -9,6 +9,8 @@ const utils = require('./utils')
 
 // checkIfRunning();
 
+const CONNECTED_FILE_PATH = path.join(__dirname, "bridge.connected");
+
 const server = http.createServer(express);
 
 let serverPort = 6627;
@@ -40,7 +42,7 @@ module.exports = {
               event: "SandoDevHelperConnected",
             })
           );
-          fs.writeFileSync("bridge.connected", "", "utf-8");
+          fs.writeFileSync(CONNECTED_FILE_PATH, "", "utf-8");
           resolve(true);
         }
 
@@ -177,7 +179,7 @@ module.exports = {
         });
         ws.on("close", function closeConnection(ws, req) {
           if (req.url === "/sammi-bridge") {
-            fs.rmSync("bridge.connected");
+            fs.rmSync(CONNECTED_FILE_PATH);
           }
         });
       });
