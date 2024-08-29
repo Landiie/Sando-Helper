@@ -27,7 +27,7 @@ module.exports = {
     return crypto.createHash("md5").update(str).digest("hex");
   },
   getAppPath() {
-    if (app.isPackaged()) {
+    if (app.isPackaged) {
       return path.join(app.getAppPath(), "..", "..");
     } else {
       return app.getAppPath();
