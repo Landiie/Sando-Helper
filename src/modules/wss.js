@@ -6,6 +6,7 @@ const { EventEmitter } = require("events");
 const dialog = require("./dialog");
 const { app } = require("electron");
 const utils = require('./utils')
+const path = require("path");
 
 // checkIfRunning();
 
