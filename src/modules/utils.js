@@ -1,5 +1,6 @@
 const crypto = require("crypto");
-
+const { app } = require("electron");
+const path = require("path");
 module.exports = {
   getArgValue(query, args) {
     const arg = process.argv.filter(p => p.indexOf(query) >= 0)[0];
@@ -24,6 +25,13 @@ module.exports = {
   },
   createHash(str) {
     return crypto.createHash("md5").update(str).digest("hex");
+  },
+  getAppPath() {
+    if (app.isPackaged()) {
+      return path.join(app.getAppPath(), "..", "..");
+    } else {
+      return app.getAppPath();
+    }
   },
   // appendToUrl(url, append) {
   //   let pos = url.indexOf("?")
