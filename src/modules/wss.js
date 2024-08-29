@@ -30,8 +30,6 @@ module.exports = {
   events: events,
   startup() {
     return new Promise((resolve, reject) => {
-      fs.writeFileSync("server.status", "running", "utf-8");
-
       wss.on("connection", function connection(ws, req) {
         console.log("connected: ", req.url);
         ws.sammi_identifier = req.url;
@@ -42,6 +40,7 @@ module.exports = {
               event: "SandoDevHelperConnected",
             })
           );
+          fs.writeFileSync("bridge.connected", "", "utf-8");
           resolve(true);
         }
 
@@ -177,7 +176,9 @@ module.exports = {
           // });
         });
         ws.on("close", function closeConnection(ws, req) {
-          // console.log(`closed ${ws}`);
+          if (req.url === "/sammi-bridge") {
+            fs.rmSync("bridge.connected");
+          }
         });
       });
     });
