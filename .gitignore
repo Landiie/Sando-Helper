@@ -129,3 +129,4 @@ dist
 # misc
 server.status
 .vscode/settings.json
+bridge.connected

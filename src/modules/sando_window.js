@@ -15,57 +15,57 @@ module.exports = {
     sammiId,
     sammiVar
   ) {
-    sammiPayload ??= {};
-    const wss = require("./wss.js");
-    let defs = {
-      title: "Sando Custom Window",
-      center: true,
-      alwaysOnTop: true,
-      minimizable: false,
-      autoHideMenuBar: true,
-      show: false,
-      webPreferences: {
-        preload: path.join(__dirname, "sando_window_preload.js"),
-        nodeIntegration: false,
-        contextIsolation: true,
-        additionalArguments: [
-          `--sammiButton=${sammiBtn}`,
-          `--sammiInstance=${sammiInstance}`,
-          `--sammiPayload=${JSON.stringify(sammiPayload)}`,
-          `--sammiVar=${sammiVar}`,
-        ],
-      },
-    };
-
-    if (sammiId !== "" && sammiId !== undefined)
-      defs.webPreferences.additionalArguments.push(`--sammiId=${sammiId}`);
-
-    const finalSettings = { ...defs, ...settings };
-    const win = eWindow.create(finalSettings);
-
-    win.loadURL(fileUrl);
-
-    const windowHash = this.createHash(sammiBtn, sammiInstance, sammiVar);
-    this.currentWindows[`window-${windowHash}`] = {};
-    this.currentWindows[`window-${windowHash}`].win = win;
-
-    this.currentWindows[`window-${windowHash}`].id =
-      sammiId !== undefined ? sammiId : null;
-
-    win.on("close", () => {
-      wss.sendToBridge(
-        JSON.stringify({
-          event: "SandoDevSetVariableCustomWindow",
-          button: sammiBtn,
-          variable: sammiVar,
-          instance: sammiInstance,
-          value: false,
-        })
-      );
-      this.removeWindow(sammiBtn, sammiInstance, sammiVar);
-    });
-
     return new Promise((resolve, reject) => {
+      sammiPayload ??= {};
+      const wss = require("./wss.js");
+      let defs = {
+        title: "Sando Custom Window",
+        center: true,
+        alwaysOnTop: true,
+        minimizable: false,
+        autoHideMenuBar: true,
+        show: false,
+        webPreferences: {
+          preload: path.join(__dirname, "sando_window_preload.js"),
+          nodeIntegration: false,
+          contextIsolation: true,
+          additionalArguments: [
+            `--sammiButton=${sammiBtn}`,
+            `--sammiInstance=${sammiInstance}`,
+            `--sammiPayload=${JSON.stringify(sammiPayload)}`,
+            `--sammiVar=${sammiVar}`,
+          ],
+        },
+      };
+
+      if (sammiId !== "" && sammiId !== undefined)
+        defs.webPreferences.additionalArguments.push(`--sammiId=${sammiId}`);
+
+      const finalSettings = { ...defs, ...settings };
+      const win = eWindow.create(finalSettings);
+
+      win.loadURL(fileUrl);
+
+      const windowHash = this.createHash(sammiBtn, sammiInstance, sammiVar);
+      this.currentWindows[`window-${windowHash}`] = {};
+      this.currentWindows[`window-${windowHash}`].win = win;
+
+      this.currentWindows[`window-${windowHash}`].id =
+        sammiId !== undefined ? sammiId : null;
+
+      win.on("close", () => {
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "SandoDevSetVariableCustomWindow",
+            button: sammiBtn,
+            variable: sammiVar,
+            instance: sammiInstance,
+            value: false,
+          })
+        );
+        this.removeWindow(sammiBtn, sammiInstance, sammiVar);
+      });
+
       win.on("ready-to-show", () => {
         win.show();
         resolve();

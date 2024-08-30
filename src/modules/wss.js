@@ -43,7 +43,18 @@ module.exports = {
               event: "SandoDevHelperConnected",
             })
           );
-          fs.writeFileSync(CONNECTED_FILE_PATH, "", "utf-8");
+          // try {
+          //   dialog.showMsg({
+          //     type: "info",
+          //     message: 'writing to file',
+          //   });
+          //   fs.closeSync(fs.openSync(CONNECTED_FILE_PATH, 'w'));
+          // } catch (e) {
+          //   dialog.showMsg({
+          //     type: "error",
+          //     message: e,
+          //   });
+          // }
           resolve(true);
         }
 
