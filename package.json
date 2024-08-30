@@ -1,6 +1,6 @@
 {
   "name": "sando-helper",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "An application that loads alongside Sando that enables more possibilities!",
   "main": "src/main.js",
   "scripts": {
