@@ -1,11 +1,11 @@
 {
   "name": "sando-helper",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "An application that loads alongside Sando that enables more possibilities!",
   "main": "src/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron .",
+    "start": "electron . --remote-debugging-port=9222",
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
@@ -27,9 +27,13 @@
   "dependencies": {
     "cheerio": "^1.0.0",
     "chokidar": "^3.6.0",
+    "electron-sudo": "^4.0.12",
     "express": "^4.19.2",
+    "extract-zip": "^2.0.1",
+    "file-type": "^19.4.1",
     "find-process": "^1.4.7",
     "semver": "^7.6.3",
+    "sudo-prompt": "^9.2.1",
     "ws": "^8.18.0"
   }
 }

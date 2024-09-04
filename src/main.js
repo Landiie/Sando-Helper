@@ -2,20 +2,39 @@ const wss = require("./modules/wss.js");
 const dialog = require("./modules/dialog.js");
 const sandoWindow = require("./modules/sando_window.js");
 const window = require("./modules/window.js");
-const { app, ipcMain } = require("electron");
+const { app, ipcMain, BrowserWindow } = require("electron");
 const { powerSaveBlocker } = require("electron");
 const sammiPoller = require("./modules/sammi_poller.js");
 //const deckTamper = require('./modules/deck_tamper.js')
 const obsForum = require("./modules/obs_forum.js");
 const utils = require("./modules/utils.js");
-
+const path = require("path");
+const fsSync = require("fs");
 
 powerSaveBlocker.start("prevent-app-suspension");
 // app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
-  // await obsForum.downloadPlugin("https://duckduckgo.com/50x.html?e=2");
-  await main();
+  let link = "https://obsproject.com/forum/resources/media-playlist-source.1765";
+
+  //const link = "https://obsproject.com/forum/resources/streamup-chapter-marker-manager.1962";
+  try {
+    const downloadResults = await obsForum.downloadPlugin(
+      link,
+      ["windows"],
+      ["install"]
+    );
+
+    await obsForum.installPlugin(
+      downloadResults.path,
+      path.join(app.getAppPath(), "temp")
+    );
+  } catch (e) {
+    console.error(e);
+    await dialog.showMsg({ type: "error", message: e.message });
+  }
+  
+  //await main();
 });
 
 //windows are only opened when using the Sando: Custom Window, makes no sense to close the app when none are visible.

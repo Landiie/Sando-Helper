@@ -10,8 +10,6 @@ const path = require("path");
 
 // checkIfRunning();
 
-const CONNECTED_FILE_PATH = path.join(utils.getAppPath(), "bridge.connected");
-
 const server = http.createServer(express);
 
 let serverPort = 6627;

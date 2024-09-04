@@ -130,3 +130,5 @@ dist
 server.status
 .vscode/settings.json
 bridge.connected
+plugins
+temp/*

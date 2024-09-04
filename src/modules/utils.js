@@ -1,6 +1,12 @@
 const crypto = require("crypto");
 const { app } = require("electron");
 const path = require("path");
+const fs = require("fs").promises;
+const child_process = require("child_process");
+const { sFetch } = require("./rate_limiter.js");
+
+let rateLimits = {};
+
 module.exports = {
   getArgValue(query, args) {
     const arg = process.argv.filter(p => p.indexOf(query) >= 0)[0];
@@ -31,6 +37,51 @@ module.exports = {
       return path.join(app.getAppPath(), "..", "..");
     } else {
       return app.getAppPath();
+    }
+  },
+  async downloadFile(url, path) {
+    const res = await sFetch(url, {}, 2000);
+    if (res.status !== 200) {
+      throw new Error("Could not fetch download page.");
+    }
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    try {
+      await fs.writeFile(path, buffer);
+    } catch (e) {
+      throw new Error("could not write downloaded file: " + e);
+    }
+  },
+  runShell(command) {
+    return new Promise((resolve, reject) => {
+      try {
+        child_process.exec(command, (err, stdout, stderr) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(stdout);
+        });
+      } catch (e) {
+        reject(e);
+      }
+    });
+  },
+  async runAdminScript(scriptName, params) {
+    const command = `cd src/modules/admin && admin.bat "${process.execPath}" "${scriptName}" ${params}`;
+    try {
+      const res = await this.runShell(command);
+      const query = "child_res: ";
+      const output = res.substring(res.indexOf(query) + query.length);
+      const outputType = output.substring(0, output.indexOf("|"));
+      const outputResult = output.substring(output.indexOf("|") + 1);
+
+      if (outputType === "ERROR") {
+        throw new Error(outputResult);
+      }
+      return outputResult;
+    } catch (e) {
+      throw new Error("utils.runAdminScript: " + e.message);
     }
   },
   // appendToUrl(url, append) {
