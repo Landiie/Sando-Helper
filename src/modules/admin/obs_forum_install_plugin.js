@@ -21,7 +21,7 @@ async function main() {
     });
     fsSync.unlinkSync(pluginPath);
 
-    returnProcess(0, "success");
+    returnProcess(0, "OK");
   } catch (e) {
     returnProcess(1, e);
   }
@@ -33,7 +33,6 @@ function returnProcess(code, msg) {
     returnMsg += "ERROR|";
   }
 
-  console.log(returnMsg + msg);
   process.exit(code);
 }
 

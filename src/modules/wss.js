@@ -12,7 +12,7 @@ const path = require("path");
 
 const server = http.createServer(express);
 
-let serverPort = 6627;
+let serverPort = 6626;
 
 if (app.isPackaged) {
   serverPort = utils.getArgValue("--port", process.argv);

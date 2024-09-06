@@ -16,6 +16,6 @@ module.exports = {
       const res = await findProcess("pid", sammiPid, true);
       if (res.length === 0) app.quit();
       console.log(res);
-    }, 500);
+    }, 25000);
   },
 };

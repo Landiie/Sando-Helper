@@ -11,59 +11,86 @@ const child_process = require("child_process");
 const ft = import("../../node_modules/file-type/core.js");
 const { sFetch } = require("./rate_limiter.js");
 module.exports = {
-  async installPlugin(pluginFilePath, obsPath) {
+  async downloadPlugin(
+    pluginId,
+    whitelist,
+    blacklist,
+    name,
+    version = "latest"
+  ) {
     try {
-      const res = await utils.runAdminScript(
-        "obs_forum_install_plugin.js",
-        `"${path.resolve(pluginFilePath)}" "${path.resolve(obsPath)}"`
-      );
-      console.log(res);
-    } catch (e) {
-      throw new Error("obs_forum.installPlugin: " + e.message);
-    }
-  },
-  async downloadPlugin(url, whitelist, blacklist, version = "latest") {
-    const pluginVersions = await parsePluginVersions(url);
-
-    if (version === "latest") version = Object.keys(pluginVersions)[0];
-    let link = pluginVersions[version];
-
-    if (link === undefined) {
-      throw new Error(
-        `Version "${version}" not found in retrieved plugin history.`
-      );
-    }
-    let downloadLink = null;
-    try {
-      downloadLink = await parsePluginDownloadPage(
-        "https://obsproject.com" + link,
+      console.log(
+        "download plugin begin, data: ",
+        pluginId,
         whitelist,
         blacklist,
+        name,
         version
       );
-    } catch (e) {
-      throw new Error("obs_forum.downloadPlugin: " + e);
-    }
-
-    try {
-      const pluginPath = path.join(app.getAppPath(), "plugins");
-      const pluginFilePath = path.join(
-        pluginPath,
-        utils.createHash(url) + ".zip"
+      console.log("parsing plugin versions");
+      const pluginVersions = await parsePluginVersions(
+        `https://obsproject.com/forum/resources/${pluginId}/`
       );
-      pluginPathExists = fsSync.existsSync(pluginPath);
-      if (!pluginPathExists) {
-        await fs.mkdir(pluginPath);
+      console.log("parsing plugin versions DONE");
+
+      if (version === "latest") version = Object.keys(pluginVersions)[0];
+      let link = pluginVersions[version];
+
+      if (link === undefined) {
+        throw new Error(
+          `Version "${version}" not found in retrieved plugin history.`
+        );
+      }
+      let downloadLink = null;
+      try {
+        console.log(
+          "parsing plugin download page: ",
+          "https://obsproject.com" + link
+        );
+        downloadLink = await parsePluginDownloadPage(
+          "https://obsproject.com" + link,
+          whitelist,
+          blacklist,
+          version
+        );
+        console.log("parsing plugin download page DONE");
+      } catch (e) {
+        throw new Error("obs_forum.downloadPlugin: " + e);
       }
 
-      await utils.downloadFile(downloadLink, pluginFilePath);
+      try {
+        console.log("downloading plugin file: ", downloadLink);
+        const pluginPath = path.join(app.getAppPath(), "plugins");
+        const pluginFilePath = path.join(
+          pluginPath,
+          utils.createHash(pluginId) + ".zip"
+        );
+        pluginPathExists = fsSync.existsSync(pluginPath);
+        if (!pluginPathExists) {
+          await fs.mkdir(pluginPath);
+        }
 
-      return {
-        version: version,
-        path: pluginFilePath,
-      };
+        await utils.downloadFile(downloadLink, pluginFilePath);
+        console.log("downloading plugin file DONE");
+        console.log("finished! return.");
+
+        return {
+          name: name,
+          status: "OK",
+          version: version,
+          path: pluginFilePath,
+        };
+      } catch (e) {
+        throw new Error("could not download plugin file: " + e);
+      }
     } catch (e) {
-      throw new Error("could not download plugin file: " + e);
+      console.error(e);
+      // throw new Error("obs_forum.downloadPlugin: " + e);
+      return {
+        name: name,
+        status: "ERROR",
+        message: e.message,
+      };
     }
   },
   async comparePluginVersion(pluginLogPos, url, targetVersion) {
@@ -290,7 +317,7 @@ function getWebsiteType(rawHtml) {
 
 async function parsePluginVersions(url) {
   const pluginVersions = {};
-  if (url.endsWith('/')) url = url.slice(0, -1);
+  if (url.endsWith("/")) url = url.slice(0, -1);
   const res = await sFetch(url + "/history", {}, 2000);
   if (res.status !== 200) {
     throw new Error("Could not fetch URL.");

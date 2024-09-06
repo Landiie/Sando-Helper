@@ -1,5 +1,5 @@
 const domainLimits = {};
-
+console.log('rate limiter loaded');
 function rateLimit(url, limit, duration) {
   return new Promise(resolve => {
     const now = Date.now();
@@ -53,6 +53,9 @@ function getDomain(url) {
 module.exports = {
   async sFetch(url, options, delay = 1000) {
     const limit = 1; // per duration
+
+    console.log('a call was made, lets see the domain list: ')
+    console.log(domainLimits);
 
     await rateLimit(url, limit, delay);
     const res = await fetch(url, options, delay);

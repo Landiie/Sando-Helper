@@ -74,7 +74,9 @@ module.exports = {
       const query = "child_res: ";
       const output = res.substring(res.indexOf(query) + query.length);
       const outputType = output.substring(0, output.indexOf("|"));
-      const outputResult = output.substring(output.indexOf("|") + 1);
+      const outputResult = output
+        .substring(output.indexOf("|") + 1)
+        .replace(/^[\n\t]+|[\n\t]+$/g, "");
 
       if (outputType === "ERROR") {
         throw new Error(outputResult);

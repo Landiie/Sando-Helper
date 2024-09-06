@@ -10,31 +10,32 @@ const obsForum = require("./modules/obs_forum.js");
 const utils = require("./modules/utils.js");
 const path = require("path");
 const fsSync = require("fs");
+const obs = require("./modules/obs.js");
 
 powerSaveBlocker.start("prevent-app-suspension");
 // app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
-  let link = "https://obsproject.com/forum/resources/media-playlist-source.1765";
+  let link = "https://obsproject.com/forum/resources/move.913";
 
   //const link = "https://obsproject.com/forum/resources/streamup-chapter-marker-manager.1962";
-  try {
-    const downloadResults = await obsForum.downloadPlugin(
-      link,
-      ["windows"],
-      ["install"]
-    );
+  // try {
+  //   const downloadResults = await obsForum.downloadPlugin(
+  //     link,
+  //     ["windows"],
+  //     ["install"]
+  //   );
 
-    await obsForum.installPlugin(
-      downloadResults.path,
-      path.join(app.getAppPath(), "temp")
-    );
-  } catch (e) {
-    console.error(e);
-    await dialog.showMsg({ type: "error", message: e.message });
-  }
-  
-  //await main();
+  //   await obs.installPlugin(
+  //     downloadResults.path,
+  //     path.join(app.getAppPath(), "temp")
+  //   );
+  // } catch (e) {
+  //   console.error(e);
+  //   await dialog.showMsg({ type: "error", message: e.message });
+  // }
+
+  await main();
 });
 
 //windows are only opened when using the Sando: Custom Window, makes no sense to close the app when none are visible.
@@ -146,6 +147,63 @@ wss.events.on("sammi-bridge-message", async e => {
   }
 
   switch (data.event) {
+    case "OBS_Plugin_Install": {
+      // const installPromises = [];
+      // data.plugins.forEach(plugin => {
+      //   installPromises.push(obs.installPlugin(plugin.path, data.obsPath));
+      // });
+
+      // const results = await Promise.all(installPromises);
+      //?
+      const installResults = [];
+      for (let i = 0; i < data.plugins.length; i++) {
+        const plugin = data.plugins[i];
+        const res = await obs.installPlugin(
+          plugin.name,
+          plugin.path,
+          data.obsPath
+        );
+        installResults.push(res);
+      }
+
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "Sando_OBS_Plugin_Install",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          results: installResults,
+        })
+      );
+      break;
+    }
+    case "OBS_Plugin_Download": {
+      const downloadPromises = [];
+      data.plugins.forEach(plugin => {
+        downloadPromises.push(
+          obsForum.downloadPlugin(
+            plugin.link,
+            plugin.whitelist,
+            plugin.blacklist,
+            plugin.name,
+            plugin.version ? plugin.version : "latest"
+          )
+        );
+      });
+
+      const results = await Promise.all(downloadPromises);
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "Sando_OBS_Plugin_Download",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          results: results,
+        })
+      );
+      console.log(results);
+      break;
+    }
     case "NewFileSave": {
       const res = await dialog.showSave(data.config);
       wss.sendToBridge(
