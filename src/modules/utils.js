@@ -5,6 +5,7 @@ const fs = require("fs").promises;
 const child_process = require("child_process");
 const { sFetch } = require("./rate_limiter.js");
 
+
 let rateLimits = {};
 
 module.exports = {
@@ -71,12 +72,14 @@ module.exports = {
     const command = `cd src/modules/admin && admin.bat "${process.execPath}" "${scriptName}" ${params}`;
     try {
       const res = await this.runShell(command);
+
       const query = "child_res: ";
       const output = res.substring(res.indexOf(query) + query.length);
       const outputType = output.substring(0, output.indexOf("|"));
       const outputResult = output
         .substring(output.indexOf("|") + 1)
         .replace(/^[\n\t]+|[\n\t]+$/g, "");
+
 
       if (outputType === "ERROR") {
         throw new Error(outputResult);

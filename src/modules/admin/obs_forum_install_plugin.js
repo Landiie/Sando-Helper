@@ -32,7 +32,7 @@ function returnProcess(code, msg) {
   if (code === 1) {
     returnMsg += "ERROR|";
   }
-
+  console.log(returnMsg + msg);
   process.exit(code);
 }
 

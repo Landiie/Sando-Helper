@@ -16,25 +16,6 @@ powerSaveBlocker.start("prevent-app-suspension");
 // app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
-  let link = "https://obsproject.com/forum/resources/move.913";
-
-  //const link = "https://obsproject.com/forum/resources/streamup-chapter-marker-manager.1962";
-  // try {
-  //   const downloadResults = await obsForum.downloadPlugin(
-  //     link,
-  //     ["windows"],
-  //     ["install"]
-  //   );
-
-  //   await obs.installPlugin(
-  //     downloadResults.path,
-  //     path.join(app.getAppPath(), "temp")
-  //   );
-  // } catch (e) {
-  //   console.error(e);
-  //   await dialog.showMsg({ type: "error", message: e.message });
-  // }
-
   await main();
 });
 
@@ -148,13 +129,6 @@ wss.events.on("sammi-bridge-message", async e => {
 
   switch (data.event) {
     case "OBS_Plugin_Install": {
-      // const installPromises = [];
-      // data.plugins.forEach(plugin => {
-      //   installPromises.push(obs.installPlugin(plugin.path, data.obsPath));
-      // });
-
-      // const results = await Promise.all(installPromises);
-      //?
       const installResults = [];
       for (let i = 0; i < data.plugins.length; i++) {
         const plugin = data.plugins[i];

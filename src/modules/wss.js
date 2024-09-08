@@ -2,26 +2,69 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const fs = require("fs");
+const fsP = require("fs").promises;
 const { EventEmitter } = require("events");
 const dialog = require("./dialog");
 const { app } = require("electron");
-const utils = require('./utils')
+const utils = require("./utils");
 const path = require("path");
+const rawBody = require("raw-body");
 
-// checkIfRunning();
+const expressApp = express();
 
-const server = http.createServer(express);
+expressApp.use((req, res, next) => {
+  rawBody(
+    req,
+    {
+      length: req.headers["content-length"],
+      encoding: req.charset || "utf-8",
+    },
+    (err, string) => {
+      if (err) return next(err);
+      req.body = string;
+      next();
+    }
+  );
+});
+
+// Handle HTTP POST requests
+expressApp.post("/obs-install-plugins", async (req, res) => {
+  const obs = require("./obs");
+  const data = JSON.parse(req.body);
+
+  const installResults = [];
+  for (let i = 0; i < data.plugins.length; i++) {
+    const plugin = data.plugins[i];
+    const res = await obs.installPlugin(plugin.name, plugin.path, data.obsPath);
+    installResults.push(res);
+  }
+
+  console.log("install results", installResults);
+  res.json({
+    results: installResults,
+  });
+
+  // try {
+  //   const result = await vm.runInNewContext(req.body, { require, console, __dirname, __filename });
+  //   res.json(result);
+  // } catch (e) {
+  //   res.json(e.message)
+  // }
+  //console.log(result);
+});
+
+const server = http.createServer(expressApp);
 
 let serverPort = 6626;
 
 if (app.isPackaged) {
   serverPort = utils.getArgValue("--port", process.argv);
 } else {
-  console.log('dev mode, using default port', serverPort)
+  console.log("dev mode, using default port", serverPort);
 }
 
-server.listen(serverPort, function () {
-  // console.log(`Relay server is listening on ${configs.port}!`);
+server.listen(serverPort, "127.0.0.1", function () {
+  console.log(`Relay server is listening on ${serverPort}!`);
 });
 
 const wss = new WebSocket.Server({ server });

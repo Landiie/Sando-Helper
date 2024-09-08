@@ -32,6 +32,7 @@
     "extract-zip": "^2.0.1",
     "file-type": "^19.4.1",
     "find-process": "^1.4.7",
+    "raw-body": "^3.0.0",
     "semver": "^7.6.3",
     "sudo-prompt": "^9.2.1",
     "ws": "^8.18.0"
