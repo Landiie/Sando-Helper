@@ -90,6 +90,7 @@ module.exports = {
         name: name,
         status: "ERROR",
         message: e.message,
+        manualLink: `https://obsproject.com/forum/resources/${pluginId}/`
       };
     }
   },

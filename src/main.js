@@ -11,6 +11,7 @@ const utils = require("./modules/utils.js");
 const path = require("path");
 const fsSync = require("fs");
 const obs = require("./modules/obs.js");
+const sammi = require("./modules/sammi/main.js");
 
 powerSaveBlocker.start("prevent-app-suspension");
 // app.disableHardwareAcceleration();
@@ -26,6 +27,7 @@ app.on("window-all-closed", e => {
 
 async function main() {
   sammiPoller.start();
+  await sammi.initDecks();
   //await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
   const startupPass = await wss.startup();
   if (!startupPass) {
@@ -120,7 +122,7 @@ wss.events.on("sammi-bridge-message", async e => {
     return;
   }
 
-  // console.log("message from sammi (PARSED): ", data);
+  console.log("message from sammi (PARSED): ", data);
 
   if (!data.event) {
     const msg = "invalid, or lack of event on bridge payload";
@@ -128,6 +130,33 @@ wss.events.on("sammi-bridge-message", async e => {
   }
 
   switch (data.event) {
+    case "OBS_Plugin_Version_Check": {
+      const versionCheckPromises = [];
+      data.plugins.forEach(plugin => {
+        versionCheckPromises.push(
+          obs.pluginVersionCheck(
+            plugin.name,
+            plugin.targetVersion,
+            data.log,
+            plugin.startPos,
+            plugin?.endPos
+          )
+        );
+      });
+
+      const results = await Promise.all(versionCheckPromises);
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "Sando_OBS_Plugin_Version_Check",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          results: results,
+        })
+      );
+      console.log(results);
+      break;
+    }
     case "OBS_Plugin_Install": {
       const installResults = [];
       for (let i = 0; i < data.plugins.length; i++) {
@@ -166,6 +195,9 @@ wss.events.on("sammi-bridge-message", async e => {
       });
 
       const results = await Promise.all(downloadPromises);
+
+      const erroredPlugins = results.filter(res => res.status === "ERROR");
+
       wss.sendToBridge(
         JSON.stringify({
           event: "Sando_OBS_Plugin_Download",
@@ -277,6 +309,14 @@ wss.events.on("sammi-bridge-message", async e => {
     case "testing": {
       const result = await dialog.showOpen({});
       console.log(result);
+      break;
+    }
+    case "current deck data": {
+      console.log("current deck data: ", sammi.deckData);
+      break;
+    }
+    case "getDeckNameButtonId": {
+      console.log(sammi.getDeckNameFromButtonId(data.buttonId));
       break;
     }
     default: {

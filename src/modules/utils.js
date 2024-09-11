@@ -5,7 +5,6 @@ const fs = require("fs").promises;
 const child_process = require("child_process");
 const { sFetch } = require("./rate_limiter.js");
 
-
 let rateLimits = {};
 
 module.exports = {
@@ -80,7 +79,6 @@ module.exports = {
         .substring(output.indexOf("|") + 1)
         .replace(/^[\n\t]+|[\n\t]+$/g, "");
 
-
       if (outputType === "ERROR") {
         throw new Error(outputResult);
       }
@@ -88,6 +86,12 @@ module.exports = {
     } catch (e) {
       throw new Error("utils.runAdminScript: " + e.message);
     }
+  },
+  b64Encode(str) {
+    return Buffer.from(str).toString("base64");
+  },
+  b64Decode(b64) {
+    return Buffer.from(b64, "base64").toString();
   },
   // appendToUrl(url, append) {
   //   let pos = url.indexOf("?")

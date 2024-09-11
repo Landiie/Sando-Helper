@@ -1,8 +1,8 @@
-const observe = require("./observe");
+const observe = require("../observe");
 const path = require("path");
-const utils = require("./utils");
+const utils = require("../utils");
 const fs = require("fs").promises;
-const dialog = require("./dialog");
+const dialog = require("../dialog");
 
 const deckJsonPath =
   "C:\\Cloud\\Google Drive (Business)\\SAMMI (Product Development)\\json\\decks_data.json";
