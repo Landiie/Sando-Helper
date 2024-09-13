@@ -39,6 +39,13 @@ module.exports = {
       return app.getAppPath();
     }
   },
+  async copyFile(src, dest) {
+    try {
+      await fs.copyFile(src, dest);
+    } catch (e) {
+      throw new Error("Could not copy file: " + e);
+    }
+  },
   async downloadFile(url, path) {
     const res = await sFetch(url, {}, 2000);
     if (res.status !== 200) {

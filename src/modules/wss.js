@@ -34,7 +34,6 @@ expressApp.post("/obs-install-plugins", async (req, res) => {
   res.json({ status: "OK" });
   const obs = require("./obs");
   const data = JSON.parse(req.body);
-  //TODO: add consent window
   const deckName = data.source;
   const pluginNames = data.plugins.map(plugin => plugin.name);
 

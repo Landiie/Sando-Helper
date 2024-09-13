@@ -2,7 +2,7 @@ const wss = require("./modules/wss.js");
 const dialog = require("./modules/dialog.js");
 const sandoWindow = require("./modules/sando_window.js");
 const window = require("./modules/window.js");
-const { app, ipcMain, BrowserWindow } = require("electron");
+const { app, ipcMain, BrowserWindow, shell } = require("electron");
 const { powerSaveBlocker } = require("electron");
 const sammiPoller = require("./modules/sammi_poller.js");
 //const deckTamper = require('./modules/deck_tamper.js')
@@ -12,6 +12,8 @@ const path = require("path");
 const fsSync = require("fs");
 const obs = require("./modules/obs.js");
 const sammi = require("./modules/sammi/main.js");
+const { error } = require("console");
+const fsP = require("fs").promises;
 
 powerSaveBlocker.start("prevent-app-suspension");
 // app.disableHardwareAcceleration();
@@ -40,6 +42,10 @@ async function main() {
   //   })
   // );
 }
+
+ipcMain.on("open-external-link", (e, link) => {
+  shell.openExternal(link);
+});
 
 ipcMain.on("SandoTriggerExt", (e, extTrigger, params) => {
   // console.log("SandoTriggerExt was called.");
@@ -181,22 +187,199 @@ wss.events.on("sammi-bridge-message", async e => {
       break;
     }
     case "OBS_Plugin_Download": {
-      const downloadPromises = [];
-      data.plugins.forEach(plugin => {
-        downloadPromises.push(
-          obsForum.downloadPlugin(
-            plugin.link,
-            plugin.whitelist,
-            plugin.blacklist,
-            plugin.name,
-            plugin.version ? plugin.version : "latest"
+      let autoDlRetry = true;
+      let manualDl = false;
+      let downloadResults = [];
+      let erroredPlugins = [];
+      while (autoDlRetry && !manualDl) {
+        const downloadPromises = [];
+        data.plugins.forEach(plugin => {
+          downloadPromises.push(
+            obsForum.downloadPlugin(
+              plugin.link,
+              plugin.whitelist,
+              plugin.blacklist,
+              plugin.name,
+              (plugin.version = plugin.latest ? "latest" : plugin.version)
+            )
+          );
+        });
+
+        const results = await Promise.all(downloadPromises);
+
+        console.log("results", results);
+
+        erroredPlugins = [];
+        erroredPlugins = erroredPlugins.concat(
+          results.filter(res => res.status === "ERROR")
+        );
+
+        if (erroredPlugins.length === 0) {
+          wss.sendToBridge(
+            JSON.stringify({
+              event: "Sando_OBS_Plugin_Download",
+              button: data.sammiBtn,
+              variable: data.sammiVar,
+              instance: data.sammiInstance,
+              results: results,
+            })
+          );
+          console.log(results);
+          return;
+        }
+        downloadResults = [];
+        downloadResults = downloadResults.concat(
+          results.filter(res => res.status === "OK")
+        );
+        //there were errors, inform and see if user wants to retry or attempt manual
+        const retryRes = await dialog.showMsg({
+          type: "error",
+          message: `There were errors downloading the following plugins:\n\n ${erroredPlugins
+            .map(p => `${p.name}: ${p.message}`)
+            .join(
+              "\n"
+            )}\n\nWould you like to retry the download? If not, you can launch the manual installation process.`,
+          buttons: ["Retry", "Manual Installation"],
+        });
+        if (retryRes.response === 1) {
+          manualDl = true;
+          break;
+        }
+      }
+      if (!manualDl) {
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_OBS_Plugin_Download",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: "ABORTED",
+          })
+        );
+        break;
+      }
+      //manual download
+      let manualDlRetry = true;
+      let manualPlugins = [];
+      while (manualDlRetry) {
+        const manualPluginWindow = () => {
+          return new Promise((resolve, reject) => {
+            const mpWin = new BrowserWindow({
+              title: "Sando: OBS Plugin Download Manual",
+              width: 896,
+              height: 609,
+              center: true,
+              alwaysOnTop: true,
+              minimizable: false,
+              autoHideMenuBar: true,
+              show: false,
+              webPreferences: {
+                preload: path.join(
+                  __dirname,
+                  "pages",
+                  "OBS_Plugin_Download_Manual_preload.js"
+                ),
+                nodeIntegration: false,
+                contextIsolation: true,
+                additionalArguments: [
+                  `--plugins=${JSON.stringify(erroredPlugins)}`,
+                ],
+              },
+            });
+
+            mpWin.loadFile(
+              path.join(__dirname, "pages", "OBS_Plugin_Download_Manual.html")
+            );
+
+            ipcMain.once("plugin-manual-data", (event, data) => {
+              mpWin.destroy();
+              resolve(data);
+            });
+
+            mpWin.on("ready-to-show", () => {
+              mpWin.show();
+            });
+
+            mpWin.on("close", () => {
+              resolve(null);
+            });
+          });
+        };
+
+        const mpResp = await manualPluginWindow();
+
+        if (mpResp === null) {
+          const mpRespCancel = await dialog.showMsg({
+            type: "warning",
+            message:
+              "Are you sure you want to abort manual installation?\n\n(The extension creator expects you to have the plugins, so unexpected behavior may occur!)",
+            buttons: ["Yes", "No"],
+            defaultId: 1,
+          });
+
+          if (mpRespCancel.response === 0) {
+            wss.sendToBridge(
+              JSON.stringify({
+                event: "Sando_OBS_Plugin_Download",
+                button: data.sammiBtn,
+                variable: data.sammiVar,
+                instance: data.sammiInstance,
+                results: "ABORTED",
+              })
+            );
+
+            manualDlRetry = false;
+            return;
+          }
+        } else {
+          manualPlugins = mpResp;
+          break;
+        }
+      }
+
+      //copy files to manual plugin folder
+      const copyOperations = [];
+      const manualPluginFolder = path.join(__dirname, "..", "manual_plugins");
+      console.log(manualPluginFolder);
+
+      if (!fsSync.existsSync(manualPluginFolder)) {
+        fsSync.mkdirSync(manualPluginFolder);
+      }
+
+      console.log("STUFF", manualPlugins);
+      manualPlugins.forEach(plugin => {
+        copyOperations.push(
+          fsP.copyFile(
+            plugin.path,
+            path.join(manualPluginFolder, path.basename(plugin.path))
           )
         );
+        //while here, fix path to point to the manual plugin folder, and statuses to OK
+        plugin.path = path.resolve(
+          path.join(manualPluginFolder, path.basename(plugin.path))
+        );
+        plugin.status = "OK";
       });
+      try {
+        await Promise.all(copyOperations);
+      } catch (e) {
+        const msg =
+          "There was an error copying the files to the manual plugin folder:\n\n" +
+          e.message;
+        await dialog.showMsg({ type: "error", message: msg });
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_OBS_Plugin_Download",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: "ABORTED",
+          })
+        );
+      }
+      downloadResults = downloadResults.concat(manualPlugins);
 
-      const results = await Promise.all(downloadPromises);
-
-      const erroredPlugins = results.filter(res => res.status === "ERROR");
+      console.log("final results", downloadResults);
 
       wss.sendToBridge(
         JSON.stringify({
@@ -204,10 +387,10 @@ wss.events.on("sammi-bridge-message", async e => {
           button: data.sammiBtn,
           variable: data.sammiVar,
           instance: data.sammiInstance,
-          results: results,
+          results: downloadResults,
         })
       );
-      console.log(results);
+
       break;
     }
     case "NewFileSave": {

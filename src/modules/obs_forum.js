@@ -11,6 +11,18 @@ const child_process = require("child_process");
 const ft = import("../../node_modules/file-type/core.js");
 const { sFetch } = require("./rate_limiter.js");
 module.exports = {
+  async downloadPluginsManual(plguinIds) {
+    console.log("downloading plugin file: ", downloadLink);
+    const pluginPath = path.join(app.getAppPath(), "plugins_manual");
+    // const pluginFilePath = path.join(
+    //   pluginPath,
+    //   utils.createHash(pluginId) + ".zip"
+    // );
+    pluginPathExists = fsSync.existsSync(pluginPath);
+    if (!pluginPathExists) {
+      await fs.mkdir(pluginPath);
+    }
+  },
   async downloadPlugin(
     pluginId,
     whitelist,
@@ -90,7 +102,8 @@ module.exports = {
         name: name,
         status: "ERROR",
         message: e.message,
-        manualLink: `https://obsproject.com/forum/resources/${pluginId}/`
+        id: pluginId,
+        version: version
       };
     }
   },

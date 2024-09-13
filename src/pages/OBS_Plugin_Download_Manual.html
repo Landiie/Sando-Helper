@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="resources/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<style>
+    body {
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(13, 102, 78, 0.458);
+    }
+
+    #obsLogo {
+        position: absolute;
+        right: -100px;
+        bottom: -100px;
+        opacity: 0.3;
+        z-index: -1;
+    }
+
+    .wrapper {
+        background-color: rgba(255, 255, 255, 0.381);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        margin: 1rem;
+        border-radius: 1rem;
+    }
+
+    .wrappers-wrapper {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    ul {
+        border-radius: 0.4rem;
+        margin: 0;
+        border: 1px solid black;
+        padding: 10rem;
+        overflow-y: scroll;
+        max-height: 20rem;
+        width: 90%;
+        list-style-type: none;
+        padding: 0.5rem;
+        overflow-y: scroll;
+        display: flex;
+        flex-direction: column;
+
+        gap: 1rem;
+    }
+
+    .options {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .watermark {
+        position: absolute;
+        bottom: 0;
+        right: 5px;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: rgba(0, 0, 0, 0.21)
+    }
+
+    .file-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-width: 2px;
+        border-color: black;
+        border-style: dashed;
+        border-radius: 1rem;
+        padding: 1rem;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .file-container div {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .file-container svg {
+        z-index: -1;
+        position: relative;
+    }
+
+    .file-container * {
+        margin: 0;
+    }
+
+    .file-container input {
+        width: 110px;
+        overflow: hidden;
+        color: transparent;
+    }
+
+    .file-container-filled {
+        display: flex;
+        justify-content: start;
+        gap: 0.5rem;
+        align-items: center;
+        width: 100%;
+    }
+
+    .file-container-filled * {
+        font-size: larger;
+        margin: 0;
+    }
+
+    .plugin-containers-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .plugin-containers li {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: start;
+        gap: 1rem;
+    }
+
+    .plugin-container-header {
+        display: flex;
+        justify-content: center;
+        align-items: end;
+        gap: 0.5rem;
+    }
+
+    .plugin-container-header * {
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+
+    .plugin-container-header a {
+        padding: 0.2rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .footer {
+        margin-top: 1rem;
+    }
+</style>
+
+<body>
+    <p class="watermark">Sando OBSPM</p>
+    <div class="wrappers-wrapper">
+        <div class="wrapper">
+            <div class="header">
+                <p>For every listen plugin, click "Download Page" to download those plugins!</p>
+                <p>Please download only the ".zip" version of the plugin you need, then drag it into the box below, or
+                    click "Choose Files..." to navigate to them.</p>
+                <p>Please make sure you are only downloading the windows zip version that is NOT the installer!</p>
+            </div>
+
+            <div class="plugin-containers-wrapper">
+                <ul class="plugin-containers">
+                    <!-- <li>
+                        <div class="plugin-container-header">
+                            <h1>Move</h1>
+                            <h4>2.0.8</h4>
+                            <a class="btn btn-secondary" href="https://obsproject.com/forum/resources/move.913/"
+                                target="_blank" rel="noopener noreferrer">Download Page<svg
+                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd"
+                                        d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5" />
+                                    <path fill-rule="evenodd"
+                                        d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z" />
+                                </svg></a>
+                        </div>
+                        <div class="file-container">
+                            <div>
+                                <input type="file" id="file-input" name="file-input">
+                                <p>or</p>
+                                <p>Drag .zip file here!</p>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="black"
+                                class="bi bi-file-earmark-zip" viewBox="0 0 16 16">
+                                <path
+                                    d="M5 7.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v.938l.4 1.599a1 1 0 0 1-.416 1.074l-.93.62a1 1 0 0 1-1.11 0l-.929-.62a1 1 0 0 1-.415-1.074L5 8.438zm2 0H6v.938a1 1 0 0 1-.03.243l-.4 1.598.93.62.929-.62-.4-1.598A1 1 0 0 1 7 8.438z" />
+                                <path
+                                    d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1h-2v1h-1v1h1v1h-1v1h1v1H6V5H5V4h1V3H5V2h1V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5z" />
+                            </svg>
+                        </div>
+                    </li> -->
+                </ul>
+            </div>
+
+            <!-- <div class="file-container-row">
+                <div class="file-container">
+                    <input type="file" multiple="true" id="file-input" name="file-input">
+                    <p>or</p>
+                    <p>Drag .zip files here!</p>
+                </div>
+
+                <div class="file-container-files">
+                    <h2>Loaded Files:</h2>
+                    <ul class="file-container-files-list">
+                        
+
+                    </ul>
+                </div>
+
+            </div>
+            <div class="footer">
+                <div class="options">
+                    <button id="promptConfirm" class="btn btn-primary">Done!</button>
+                    <button id="promptCancel" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div> -->
+            <div class="footer"></div>
+            <div class="options">
+                <button id="promptConfirm" class="btn btn-primary">Done!</button>
+                <button id="promptCancel" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    <img id="obsLogo" src="resources/img/obs.png" width="300">
+    <script src="resources/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // const fileZone = document.querySelector('.file-container');
+        // fileZone.addEventListener('dragover', (e) => {
+        //     e.stopPropagation();
+        //     e.preventDefault();
+        //     fileZone.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+        // });
+        // fileZone.addEventListener('dragleave', (e) => {
+        //     e.stopPropagation();
+        //     e.preventDefault();
+        //     fileZone.style.backgroundColor = 'transparent';
+        // });
+        // fileZone.addEventListener('drop', (e) => {
+        //     e.stopPropagation();
+        //     e.preventDefault();
+        //     fileZone.style.backgroundColor = 'transparent';
+        //     const files = e.dataTransfer.files;
+        //     for (const file of files) {
+        //         console.log(file)
+        //     }
+        // });
+
+        // const fileInput = document.querySelector('.file-container input');
+        // fileInput.addEventListener('change', (e) => {
+        //     const files = e.target.files;
+        //     for (const file of files) {
+        //         console.log(file)
+        //     }
+        // });
+    </script>
+</body>
+
+</html>
