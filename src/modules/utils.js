@@ -74,11 +74,14 @@ module.exports = {
       }
     });
   },
+
   async runAdminScript(scriptName, params) {
-    const command = `cd src/modules/admin && admin.bat "${process.execPath}" "${scriptName}" ${params}`;
+    const command = `cd src/modules/admin && admin.bat node "${scriptName}" ${params}`;
+    console.log("command: ", command);
+    
     try {
       const res = await this.runShell(command);
-
+      console.log('recieved res: ', res)
       const query = "child_res: ";
       const output = res.substring(res.indexOf(query) + query.length);
       const outputType = output.substring(0, output.indexOf("|"));
