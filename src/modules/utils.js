@@ -8,6 +8,7 @@ const { sFetch } = require("./rate_limiter.js");
 let rateLimits = {};
 
 module.exports = {
+  debug: false,
   getArgValue(query, args) {
     const arg = process.argv.filter(p => p.indexOf(query) >= 0)[0];
     if (arg === undefined) return undefined;
@@ -78,10 +79,10 @@ module.exports = {
   async runAdminScript(scriptName, params) {
     const command = `cd src/modules/admin && admin.bat node "${scriptName}" ${params}`;
     console.log("command: ", command);
-    
+
     try {
       const res = await this.runShell(command);
-      console.log('recieved res: ', res)
+      console.log("recieved res: ", res);
       const query = "child_res: ";
       const output = res.substring(res.indexOf(query) + query.length);
       const outputType = output.substring(0, output.indexOf("|"));
@@ -103,11 +104,21 @@ module.exports = {
   b64Decode(b64) {
     return Buffer.from(b64, "base64").toString();
   },
-  // appendToUrl(url, append) {
-  //   let pos = url.indexOf("?")
-  //   if (pos === -1) {
-  //     // throw new Error("Url cannot have query string to use this function.");
+  calculateHashString: function (string, hashType) {
+    return (hash = crypto.createHash(hashType).update(string).digest("hex"));
+  },
+  stringToBool: function (string) {
+    return string.toLowerCase() == "true" ? true : false;
+  },
+  log: function (msg) {
+    if (!this.debug) return;
+    console.log(msg);
+    // appendToUrl(url, append) {
+    //   let pos = url.indexOf("?")
+    //   if (pos === -1) {
+    //     // throw new Error("Url cannot have query string to use this function.");
 
-  //   }
-  // },
+    //   }
+    // },
+  },
 };

@@ -6,7 +6,6 @@ const path = require("path");
 const utils = require("./utils.js");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const extract = require("extract-zip");
-const sudo = require("sudo-prompt");
 const child_process = require("child_process");
 const ft = import("../../node_modules/file-type/core.js");
 const { sFetch } = require("./rate_limiter.js");

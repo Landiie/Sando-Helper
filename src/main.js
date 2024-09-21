@@ -9,11 +9,11 @@ const sammiPoller = require("./modules/sammi_poller.js");
 const obsForum = require("./modules/obs_forum.js");
 const utils = require("./modules/utils.js");
 const path = require("path");
-const fsSync = require("fs");
 const obs = require("./modules/obs.js");
 const sammi = require("./modules/sammi/main.js");
-const { error } = require("console");
+const fsSync = require("fs");
 const fsP = require("fs").promises;
+const obsws = require("./modules/obs_ws.js");
 
 powerSaveBlocker.start("prevent-app-suspension");
 // app.disableHardwareAcceleration();
@@ -28,14 +28,27 @@ app.on("window-all-closed", e => {
 });
 
 async function main() {
-  sammiPoller.start();
-  await sammi.initDecks();
+  try {
+    sammiPoller.start();
+    await sammi.initDecks();
+    await obsws.connect();
+  } catch (e) {
+    dialog.showMsg({ type: "error", message: e.message });
+    return;
+  }
   //await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
   const startupPass = await wss.startup();
   if (!startupPass) {
     dialog.showMsg({ type: "error", message: "Relay server could not start." });
     return;
   }
+
+  // await obsws.scenesPack('[Gacha]', [], path.join(__dirname, 'gacha_test.obspkg'))
+  // utils.debug = true;
+  await obsws.scenesUnpack(
+    `C:\\Cloud\\Google Drive (Business)\\SAMMI (Product Development)\\landies_extensions\\landituber\\obsScenes.spkg`
+  );
+  dialog.showMsg({ type: "info", message: "done" });
   // wss.sendToBridge(
   //   JSON.stringify({
   //     event: "SandoDevServerOperationalAndConnected",
@@ -136,6 +149,60 @@ wss.events.on("sammi-bridge-message", async e => {
   }
 
   switch (data.event) {
+    case "ScenePacker_Pack": {
+      if (!obsws.sceneExists(data.sceneName)) {
+        dialog.showMsg({
+          type: "error",
+          message: `The scene "${data.sceneName}" does not exist in OBS.`,
+        });
+        wss.sendToBridge({
+          event: "Sando_ScenePacker_Pack",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          result: undefined,
+        });
+        return;
+      }
+
+      let res = null;
+      try {
+        res = await obsws.scenesPack(data.scene, data.denyList, data.path);
+      } catch (e) {
+        dialog.showMsg({ type: "error", message: e.message, details: e.stack });
+        wss.sendToBridge({
+          event: "Sando_ScenePacker_Pack",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          result: undefined,
+        });
+        break;
+      }
+
+      const exists = fsSync.existsSync(res);
+
+      if (!exists) {
+        dialog.showMsg({ type: "error", message: `output path of obspkg "${res}" was not created.` });
+        wss.sendToBridge({
+          event: "Sando_ScenePacker_Pack",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          result: undefined,
+        });
+        break;
+      }
+
+      wss.sendToBridge({
+        event: "Sando_ScenePacker_Pack",
+        button: data.sammiBtn,
+        variable: data.sammiVar,
+        instance: data.sammiInstance,
+        result: res,
+      });
+      break;
+    }
     case "OBS_Plugin_Version_Check": {
       const versionCheckPromises = [];
       data.plugins.forEach(plugin => {
