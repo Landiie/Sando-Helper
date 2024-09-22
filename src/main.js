@@ -33,7 +33,7 @@ async function main() {
     await sammi.initDecks();
     await obsws.connect();
   } catch (e) {
-    dialog.showMsg({ type: "error", message: e.message });
+    dialog.showMsg({ type: "error", message: e.message, details: e.stack });
     return;
   }
   //await ws.connect(`ws://127.0.0.1:${SANDO_RELAY_PORT}/sando-helper`);
@@ -155,52 +155,64 @@ wss.events.on("sammi-bridge-message", async e => {
           type: "error",
           message: `The scene "${data.sceneName}" does not exist in OBS.`,
         });
-        wss.sendToBridge({
-          event: "Sando_ScenePacker_Pack",
-          button: data.sammiBtn,
-          variable: data.sammiVar,
-          instance: data.sammiInstance,
-          result: undefined,
-        });
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_ScenePacker_Pack",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: null,
+          })
+        );
         return;
       }
 
       let res = null;
       try {
-        res = await obsws.scenesPack(data.scene, data.denyList, data.path);
+        res = await obsws.scenesPack(data.scene, data.denyList, data.savePath);
       } catch (e) {
-        dialog.showMsg({ type: "error", message: e.message, details: e.stack });
-        wss.sendToBridge({
-          event: "Sando_ScenePacker_Pack",
-          button: data.sammiBtn,
-          variable: data.sammiVar,
-          instance: data.sammiInstance,
-          result: undefined,
-        });
+        dialog.showMsg({ type: "error", message: e.message, detail: e.stack });
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_ScenePacker_Pack",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: null,
+          })
+        );
         break;
       }
 
       const exists = fsSync.existsSync(res);
 
       if (!exists) {
-        dialog.showMsg({ type: "error", message: `output path of obspkg "${res}" was not created.` });
-        wss.sendToBridge({
+        dialog.showMsg({
+          type: "error",
+          message: `output path of obspkg "${res}" was not created.`,
+        });
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_ScenePacker_Pack",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: null,
+          })
+        );
+        break;
+      }
+      console.log("res", res);
+      
+      wss.sendToBridge(
+        JSON.stringify({
           event: "Sando_ScenePacker_Pack",
           button: data.sammiBtn,
           variable: data.sammiVar,
           instance: data.sammiInstance,
-          result: undefined,
-        });
-        break;
-      }
-
-      wss.sendToBridge({
-        event: "Sando_ScenePacker_Pack",
-        button: data.sammiBtn,
-        variable: data.sammiVar,
-        instance: data.sammiInstance,
-        result: res,
-      });
+          results: res,
+        })
+      );
       break;
     }
     case "OBS_Plugin_Version_Check": {

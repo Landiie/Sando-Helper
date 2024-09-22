@@ -6,6 +6,7 @@ const isEqual = require("lodash.isequal");
 const utils = require("./utils.js");
 const semver = require("semver");
 const { app } = require("electron");
+const path = require("path");
 
 const obs = new OBSWebSocket();
 
@@ -45,13 +46,19 @@ module.exports = {
 
     let scenes = [];
     try {
+      console.log('scenes')
       scenes = await obsGetSceneList();
+      console.log('scenes fetched ')
 
       //kickstart the chain
+      console.log('first get scene items')
       const sceneItems = await getSceneItems(targetScene);
+      console.log('first get scene items done')
+      console.log('parse filters')
       const initialFilters = parseFilters(
         await obsGetSourceFilterList(targetScene)
       );
+      console.log('parse filters done')
       const compiled = {
         packerVersion: OBSPKG_VERSION,
         sceneItems: sceneItems,
@@ -63,7 +70,9 @@ module.exports = {
       };
       console.log(compiled);
 
+      console.log('write file')
       fs.writeFileSync(outPath, JSON.stringify(compiled), "utf-8");
+      console.log('write file done')
       return outPath;
     } catch (e) {
       throw new Error(e);
@@ -312,7 +321,7 @@ module.exports = {
         obspkg.targetSceneFilters
       );
     } catch (e) {
-      dialog.showMsg({ type: "error", message: e.message });
+      dialog.showMsg({ type: "error", message: e.message, details: e.stack });
       console.log(e);
       return false;
     }
