@@ -17,7 +17,6 @@ let obsPort = 4457;
 let obsPw = "";
 let obsVersion = null;
 
-
 if (app.isPackaged) {
   obsHost = utils.getArgValue("--obsIp", process.argv);
   obsPort = utils.getArgValue("--obsPort", process.argv);
@@ -25,16 +24,36 @@ if (app.isPackaged) {
 }
 
 module.exports = {
+  connected: false,
   async connect() {
     try {
       await obs.connect(`ws://${obsHost}:${obsPort}`, obsPw, {
         rpcVersion: 1,
       });
+      module.exports.connected = true;
+      console.log('connected to obsws')
       const respVersion = await obs.call("GetVersion");
       obsVersion = respVersion.obsVersion;
+      obs.once("ConnectionClosed", () => {
+        console.log('disconnected to obsws')
+        module.exports.connected = false;
+        module.exports.reconnect();
+      });
       return true;
     } catch (e) {
       return e;
+    }
+  },
+  async reconnect() {
+    let connected = false;
+    while (!connected) {
+      console.log('attempting reconnection to obsws')
+      const res = await module.exports.connect();
+      if (res === true) {
+        connected = true;
+        break;
+      }
+      await utils.wait(2000)
     }
   },
   async scenesPack(targetScene, denyList = [], outPath) {
@@ -46,19 +65,19 @@ module.exports = {
 
     let scenes = [];
     try {
-      console.log('scenes')
+      console.log("scenes");
       scenes = await obsGetSceneList();
-      console.log('scenes fetched ')
+      console.log("scenes fetched ");
 
       //kickstart the chain
-      console.log('first get scene items')
+      console.log("first get scene items");
       const sceneItems = await getSceneItems(targetScene);
-      console.log('first get scene items done')
-      console.log('parse filters')
+      console.log("first get scene items done");
+      console.log("parse filters");
       const initialFilters = parseFilters(
         await obsGetSourceFilterList(targetScene)
       );
-      console.log('parse filters done')
+      console.log("parse filters done");
       const compiled = {
         packerVersion: OBSPKG_VERSION,
         sceneItems: sceneItems,
@@ -70,9 +89,9 @@ module.exports = {
       };
       console.log(compiled);
 
-      console.log('write file')
+      console.log("write file");
       fs.writeFileSync(outPath, JSON.stringify(compiled), "utf-8");
-      console.log('write file done')
+      console.log("write file done");
       return outPath;
     } catch (e) {
       throw new Error(e);
@@ -323,7 +342,7 @@ module.exports = {
     } catch (e) {
       dialog.showMsg({ type: "error", message: e.message, details: e.stack });
       console.log(e);
-      return false;
+      throw new Error(e);
     }
 
     return true;
@@ -411,7 +430,7 @@ module.exports = {
 
         //quick check to see if this is the end of the package manager
         if (packagerEnd(item)) {
-          return "end-unpacking";
+          return true;
           // process.exit(1);
         }
 
@@ -973,8 +992,8 @@ module.exports = {
       const res = await obs.call("GetSceneList");
       const scenes = res.scenes.map(o => o.sceneName);
       return scenes.includes(scene);
-    } catch(e) {
+    } catch (e) {
       return false;
     }
-  }
+  },
 };

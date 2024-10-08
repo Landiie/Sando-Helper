@@ -45,10 +45,6 @@ async function main() {
 
   // await obsws.scenesPack('[Gacha]', [], path.join(__dirname, 'gacha_test.obspkg'))
   // utils.debug = true;
-  await obsws.scenesUnpack(
-    `C:\\Cloud\\Google Drive (Business)\\SAMMI (Product Development)\\landies_extensions\\landituber\\obsScenes.spkg`
-  );
-  dialog.showMsg({ type: "info", message: "done" });
   // wss.sendToBridge(
   //   JSON.stringify({
   //     event: "SandoDevServerOperationalAndConnected",
@@ -149,6 +145,68 @@ wss.events.on("sammi-bridge-message", async e => {
   }
 
   switch (data.event) {
+    case "ScenePacker_Unpack": {
+      if (!fsSync.existsSync(data.obspkg)) {
+        dialog.showMsg({
+          type: "error",
+          message: `The OBS package file does not exist at "${data.obspkg}".`,
+        });
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_ScenePacker_Unpack",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: false,
+          })
+        );
+      }
+
+      let res = null;
+      try {
+        res = await obsws.scenesUnpack(data.obspkg);
+      } catch (e) {
+        dialog.showMsg({ type: "error", message: e.message, detail: e.stack });
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_ScenePacker_Unpack",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: false,
+          })
+        );
+        break;
+      }
+
+      if (res !== true) {
+        dialog.showMsg({
+          type: "error",
+          message: "unpacking finished, but unexpected result:",
+          detail: res,
+        });
+        wss.sendToBridge(
+          JSON.stringify({
+            event: "Sando_ScenePacker_Unpack",
+            button: data.sammiBtn,
+            variable: data.sammiVar,
+            instance: data.sammiInstance,
+            results: false,
+          })
+        );
+      }
+
+      wss.sendToBridge(
+        JSON.stringify({
+          event: "Sando_ScenePacker_Unpack",
+          button: data.sammiBtn,
+          variable: data.sammiVar,
+          instance: data.sammiInstance,
+          results: res,
+        })
+      );
+      break;
+    }
     case "ScenePacker_Pack": {
       if (!obsws.sceneExists(data.sceneName)) {
         dialog.showMsg({
@@ -161,7 +219,7 @@ wss.events.on("sammi-bridge-message", async e => {
             button: data.sammiBtn,
             variable: data.sammiVar,
             instance: data.sammiInstance,
-            results: null,
+            results: undefined,
           })
         );
         return;
@@ -178,7 +236,7 @@ wss.events.on("sammi-bridge-message", async e => {
             button: data.sammiBtn,
             variable: data.sammiVar,
             instance: data.sammiInstance,
-            results: null,
+            results: undefined,
           })
         );
         break;
@@ -197,13 +255,13 @@ wss.events.on("sammi-bridge-message", async e => {
             button: data.sammiBtn,
             variable: data.sammiVar,
             instance: data.sammiInstance,
-            results: null,
+            results: undefined,
           })
         );
         break;
       }
       console.log("res", res);
-      
+
       wss.sendToBridge(
         JSON.stringify({
           event: "Sando_ScenePacker_Pack",

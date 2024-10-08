@@ -8,6 +8,7 @@ const { sFetch } = require("./rate_limiter.js");
 let rateLimits = {};
 
 module.exports = {
+  bridgeConnected: false,
   debug: false,
   getArgValue(query, args) {
     const arg = process.argv.filter(p => p.indexOf(query) >= 0)[0];
@@ -65,7 +66,7 @@ module.exports = {
       try {
         child_process.exec(command, (err, stdout, stderr) => {
           if (err) {
-            reject(err);
+            reject(stderr);
             return;
           }
           resolve(stdout);
@@ -75,7 +76,13 @@ module.exports = {
       }
     });
   },
-
+  parseJson(json) {
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      return false;
+    }
+  },
   async runAdminScript(scriptName, params) {
     const command = `cd src/modules/admin && admin.bat node "${scriptName}" ${params}`;
     console.log("command: ", command);
@@ -97,6 +104,13 @@ module.exports = {
     } catch (e) {
       throw new Error("utils.runAdminScript: " + e.message);
     }
+  },
+  wait(ms) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve();
+      }, ms);
+    });
   },
   b64Encode(str) {
     return Buffer.from(str).toString("base64");

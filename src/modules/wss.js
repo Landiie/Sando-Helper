@@ -9,10 +9,11 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const utils = require("./utils");
 const path = require("path");
 const rawBody = require("raw-body");
-
+const obs = require("./obs");
 const expressApp = express();
 
 let obsInstallFinished = false;
+let obsRestartFinished = false;
 
 expressApp.use((req, res, next) => {
   rawBody(
@@ -29,9 +30,17 @@ expressApp.use((req, res, next) => {
   );
 });
 
-// Handle HTTP POST requests
+// Handle HTTP requests
+const isValidAgent = header => {
+  return header["user-agent"] === "GameMaker HTTP";
+};
+
 expressApp.post("/obs-install-plugins", async (req, res) => {
-  res.json({ status: "OK" });
+  if (!isValidAgent(req.headers)) {
+    res.status(403).send("Forbidden");
+    return;
+  }
+  res.status(200).json({ status: "OK" });
   const obs = require("./obs");
   const data = JSON.parse(req.body);
   const deckName = data.source;
@@ -117,6 +126,59 @@ expressApp.get("/obs-install-plugins-status", (req, res) => {
   obsInstallFinished = false;
 });
 
+expressApp.get("/api/*", async (req, res) => {
+  if (!isValidAgent(req.headers)) {
+    res.status(403).send("Forbidden");
+    return;
+  }
+
+  const apiPath = req.url.toLowerCase().replace("/api/", "");
+
+  switch (apiPath) {
+    case "obs/restart-status":
+      if (obsRestartFinished === false) {
+        res.json({ status: "pending" });
+        return;
+      }
+      res.json({ status: obsRestartFinished });
+      obsRestartFinished = false;
+      break;
+    case "ping":
+      res.status(200).send({ status: "OK" });
+      break;
+    default:
+      res.status(404).send("Invalid API Request");
+      break;
+  }
+});
+
+expressApp.post("/api/*", async (req, res) => {
+  if (!isValidAgent(req.headers)) {
+    res.status(403).send("Forbidden");
+    return;
+  }
+
+  const apiPath = req.url.toLowerCase().replace("/api/", "");
+
+  switch (apiPath) {
+    case "obs/restart":
+      obsRestartFinished = false;
+      res.status(200).send({status: "Running"});
+      // const body = utils.parseJson(req.body);
+      // if (!body) {
+      //   res.status(400).send({ message: "Invalid JSON body" });
+      //   return;
+      // }
+
+      const restart = await obs.restart();
+      obsRestartFinished = restart.data;
+      break;
+    default:
+      res.status(404).send("Invalid API Request");
+      break;
+  }
+});
+
 const server = http.createServer(expressApp);
 
 let serverPort = 6626;
@@ -160,6 +222,7 @@ module.exports = {
           //     message: e,
           //   });
           // }
+          utils.bridgeConnected = true;
           resolve(true);
         }
 
@@ -296,6 +359,7 @@ module.exports = {
         });
         ws.on("close", function closeConnection(ws, req) {
           if (req.url === "/sammi-bridge") {
+            utils.bridgeConnected = false;
             fs.rmSync(CONNECTED_FILE_PATH);
           }
         });
