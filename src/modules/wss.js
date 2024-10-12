@@ -36,78 +36,6 @@ const isValidAgent = header => {
 };
 
 expressApp.post("/obs-install-plugins", async (req, res) => {
-  if (!isValidAgent(req.headers)) {
-    res.status(403).send("Forbidden");
-    return;
-  }
-  res.status(200).json({ status: "OK" });
-  const obs = require("./obs");
-  const data = JSON.parse(req.body);
-  const deckName = data.source;
-  const pluginNames = data.plugins.map(plugin => plugin.name);
-
-  const consentWindow = () => {
-    return new Promise((resolve, reject) => {
-      const consentWin = new BrowserWindow({
-        title: "Sando: OBS Plugin Download Consent",
-        width: 683,
-        height: 416,
-        center: true,
-        alwaysOnTop: true,
-        minimizable: false,
-        autoHideMenuBar: true,
-        show: false,
-        webPreferences: {
-          preload: path.join(
-            __dirname,
-            "..",
-            "pages",
-            "OBS_Plugin_Install_Consent_preload.js"
-          ),
-          nodeIntegration: false,
-          contextIsolation: true,
-          additionalArguments: [
-            `--deckName=${deckName}`,
-            `--plugins=${JSON.stringify(pluginNames)}`,
-          ],
-        },
-      });
-
-      consentWin.loadFile(
-        path.join(__dirname, "..", "pages", "OBS_Plugin_Install_Consent.html")
-      );
-
-      consentWin.on("ready-to-show", () => {
-        consentWin.show();
-      });
-
-      consentWin.on("close", () => {
-        resolve(false);
-      });
-
-      ipcMain.once("consent-data", (event, data) => {
-        consentWin.destroy();
-        resolve(data);
-      });
-    });
-  };
-
-  const consentResponse = await consentWindow();
-  if (!consentResponse) {
-    obsInstallFinished = "cancelled";
-    return;
-  }
-
-  const installResults = [];
-  for (let i = 0; i < data.plugins.length; i++) {
-    const plugin = data.plugins[i];
-    const res = await obs.installPlugin(plugin.name, plugin.path, data.obsPath);
-    installResults.push(res);
-  }
-
-  console.log("install results", installResults);
-  obsInstallFinished = installResults;
-
   // try {
   //   const result = await vm.runInNewContext(req.body, { require, console, __dirname, __filename });
   //   res.json(result);
@@ -115,15 +43,6 @@ expressApp.post("/obs-install-plugins", async (req, res) => {
   //   res.json(e.message)
   // }
   //console.log(result);
-});
-
-expressApp.get("/obs-install-plugins-status", (req, res) => {
-  if (obsInstallFinished === false) {
-    res.json({ status: "pending" });
-    return;
-  }
-  res.json({ status: obsInstallFinished });
-  obsInstallFinished = false;
 });
 
 expressApp.get("/api/*", async (req, res) => {
@@ -135,6 +54,14 @@ expressApp.get("/api/*", async (req, res) => {
   const apiPath = req.url.toLowerCase().replace("/api/", "");
 
   switch (apiPath) {
+    case "obs/install-plugins-status":
+      if (obsInstallFinished === false) {
+        res.json({ status: "pending" });
+        return;
+      }
+      res.json({ status: obsInstallFinished });
+      obsInstallFinished = false;
+      break;
     case "obs/restart-status":
       if (obsRestartFinished === false) {
         res.json({ status: "pending" });
@@ -161,9 +88,91 @@ expressApp.post("/api/*", async (req, res) => {
   const apiPath = req.url.toLowerCase().replace("/api/", "");
 
   switch (apiPath) {
+    case "obs/install-plugins":
+      if (!isValidAgent(req.headers)) {
+        res.status(403).send("Forbidden");
+        return;
+      }
+      res.status(200).json({ status: "OK" });
+      const obs = require("./obs");
+      const data = JSON.parse(req.body);
+      const deckName = data.source;
+      const pluginNames = data.plugins.map(plugin => plugin.name);
+
+      const consentWindow = () => {
+        return new Promise((resolve, reject) => {
+          const consentWin = new BrowserWindow({
+            title: "Sando: OBS Plugin Download Consent",
+            width: 683,
+            height: 416,
+            center: true,
+            alwaysOnTop: true,
+            minimizable: false,
+            autoHideMenuBar: true,
+            show: false,
+            webPreferences: {
+              preload: path.join(
+                __dirname,
+                "..",
+                "pages",
+                "OBS_Plugin_Install_Consent_preload.js"
+              ),
+              nodeIntegration: false,
+              contextIsolation: true,
+              additionalArguments: [
+                `--deckName=${deckName}`,
+                `--plugins=${JSON.stringify(pluginNames)}`,
+              ],
+            },
+          });
+
+          consentWin.loadFile(
+            path.join(
+              __dirname,
+              "..",
+              "pages",
+              "OBS_Plugin_Install_Consent.html"
+            )
+          );
+
+          consentWin.on("ready-to-show", () => {
+            consentWin.show();
+          });
+
+          consentWin.on("close", () => {
+            resolve(false);
+          });
+
+          ipcMain.once("consent-data", (event, data) => {
+            consentWin.destroy();
+            resolve(data);
+          });
+        });
+      };
+
+      const consentResponse = await consentWindow();
+      if (!consentResponse) {
+        obsInstallFinished = "cancelled";
+        return;
+      }
+
+      const installResults = [];
+      for (let i = 0; i < data.plugins.length; i++) {
+        const plugin = data.plugins[i];
+        const res = await obs.installPlugin(
+          plugin.name,
+          plugin.path,
+          data.obsPath
+        );
+        installResults.push(res);
+      }
+
+      console.log("install results", installResults);
+      obsInstallFinished = installResults;
+      break;
     case "obs/restart":
       obsRestartFinished = false;
-      res.status(200).send({status: "Running"});
+      res.status(200).send({ status: "Running" });
       // const body = utils.parseJson(req.body);
       // if (!body) {
       //   res.status(400).send({ message: "Invalid JSON body" });
